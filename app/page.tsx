@@ -1,41 +1,30 @@
 // app/page.tsx
-import { supabase } from '../lib/supabaseClient';
-
-interface Review {
-  id: number;
-  title: string;
-  publisher: string;
-  author: string;
-  deadline: string;
-  url: string;
-}
+import SearchReviews from './components/SearchReviews'
+import { supabase } from '../lib/supabaseClient'
+import type { Review } from '../lib/types'
 
 export default async function HomePage() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10)
   const { data, error } = await supabase
-    .from('reviews')
+    .from('reviews')           
     .select('*')
-    .eq('deadline', today);
+    .eq('deadline', today)
 
   if (error) {
-    console.error('Supabase error 👉', error);
-    return <p className="p-6 text-red-500">오류 발생: {error.message}</p>;
+    console.error(error)
+    return <p className="p-6 text-red-500">
+      데이터 로드 중 오류가 발생했습니다: {error.message}
+    </p>
   }
 
-  const reviews = data as Review[];
+  const reviews = (data as Review[]) || []
 
   return (
     <main className="min-h-screen p-6 max-w-md mx-auto">
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">📚 책 서평단 알림</h1>
-      </header>
-
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-2">
-          오늘 마감되는 서평단{' '}
-          <span className="text-green-500">{reviews.length}개</span>
+          오늘 마감되는 서평단 <span className="text-point">{reviews.length}개</span>
         </h2>
-
         {reviews.length > 0 ? (
           reviews.map((r) => (
             <article key={r.id} className="mb-4 p-4 border rounded-lg">
@@ -57,6 +46,8 @@ export default async function HomePage() {
           <p className="text-gray-500">오늘 마감되는 서평단이 없습니다.</p>
         )}
       </section>
+
+      <SearchReviews />
     </main>
-  );
+  )
 }

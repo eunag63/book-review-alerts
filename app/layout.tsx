@@ -7,7 +7,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body className="min-h-screen bg-gray-50">
         <header className="p-6 bg-white shadow">
-          <h1 className="text-2xl font-bold">📚 책 서평단 알림</h1>
+          <h1 className="text-2xl font-bold text-black">📚 책 서평단 알림</h1>
         </header>
         <main className="max-w-md mx-auto p-6">{children}</main>
       </body>
