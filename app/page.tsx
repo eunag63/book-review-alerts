@@ -1,7 +1,8 @@
 // app/page.tsx
-import SearchReviews from './components/SearchReviews'
 import { supabase } from '../lib/supabaseClient'
 import type { Review } from '../lib/types'
+import BannerAd from './components/BannerAd'
+import SearchReviews from './components/SearchReviews'
 
 export default async function HomePage() {
   const today = new Date().toISOString().slice(0, 10)
@@ -47,6 +48,8 @@ export default async function HomePage() {
         )}
       </section>
 
+      <BannerAd />
+      
       <SearchReviews />
     </main>
   )
