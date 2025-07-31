@@ -39,7 +39,7 @@ export default async function HomePage() {
                 rel="noopener noreferrer"
                 className="text-point underline text-sm"
               >
-                자세히 보기
+                신청하러 가기
               </a>
             </article>
           ))
