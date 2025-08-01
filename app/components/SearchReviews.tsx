@@ -1,17 +1,15 @@
-// app/components/SearchReviews.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import type { Review } from '../../lib/types'
-import RecommendationChips from './RecommendationChips'  // 추천 검색어
+import RecommendationChips from './RecommendationChips'
 
 export default function SearchReviews() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Review[]>([])
   const [loading, setLoading] = useState(false)
 
-  // D-Day 계산 함수
   const calcDDay = (deadline: string) => {
     const today = new Date()
     const target = new Date(deadline)
@@ -21,7 +19,6 @@ export default function SearchReviews() {
     return diff <= 0 ? 'D-day' : `D-${diff}`
   }
 
-  // 검색 결과: 디바운스 300ms
   useEffect(() => {
     const timeout = setTimeout(async () => {
       if (!query) {
@@ -66,7 +63,6 @@ export default function SearchReviews() {
     setLoading(false)
   }
 
-  // 클릭 로그 기록 함수
   const handleClick = async (reviewId: number) => {
     await supabase.from('log_clicks').insert([{ review_id: reviewId }])
   }
@@ -81,14 +77,10 @@ export default function SearchReviews() {
         className="w-full border-b border-gray-300 pb-1 focus:border-point focus:outline-none mb-4"
       />
 
-      {/* 추천 검색어: 검색창 바로 아래 */}
       <RecommendationChips onSelect={searchByKeyword} />
 
       {loading && <p className="text-sm text-gray-500 mt-2">검색 중...</p>}
 
-      {!loading && !query && results.length === 0 && (
-        <p className="text-sm text-gray-500 mt-2">검색어를 입력하거나 키워드를 선택하세요.</p>
-      )}
       {!loading && query !== '' && results.length === 0 && (
         <p className="text-sm text-gray-500 mt-2">검색 결과가 없습니다.</p>
       )}
