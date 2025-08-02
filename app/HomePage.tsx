@@ -1,0 +1,137 @@
+// app/HomePage.tsx
+'use client'
+
+import { useState, useEffect } from 'react'
+import type { Review } from '../lib/types'
+import { getReviewsByPeriod, getAvailablePeriods, calcDDay } from '../lib/reviewUtils'
+import BannerAd from './components/BannerAd'
+import SearchReviews from './components/SearchReviews'
+
+export default function HomePage() {
+  const [availablePeriods, setAvailablePeriods] = useState<string[]>([])
+  const [currentPeriodIndex, setCurrentPeriodIndex] = useState(0)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [periodText, setPeriodText] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [showAll, setShowAll] = useState(false)
+  const displayReviews = showAll ? reviews : reviews.slice(0, 2)
+
+  useEffect(() => {
+    async function loadInitialData() {
+      const available = await getAvailablePeriods()
+      setAvailablePeriods(available)
+      
+      if (available.length > 0) {
+        const initial = available[0]
+        const initialData = await getReviewsByPeriod(initial)
+        setReviews(initialData.reviews)
+        setPeriodText(initialData.periodText)
+      }
+      setLoading(false)
+    }
+    loadInitialData()
+  }, [])
+
+  const handlePeriodChange = async (direction: 'prev' | 'next') => {
+    const newIndex =
+      direction === 'prev'
+        ? Math.max(0, currentPeriodIndex - 1)
+        : Math.min(availablePeriods.length - 1, currentPeriodIndex + 1)
+    if (newIndex === currentPeriodIndex) return
+    setLoading(true)
+    const period = availablePeriods[newIndex]
+    const result = await getReviewsByPeriod(period)
+    if (!result.error) {
+      setCurrentPeriodIndex(newIndex)
+      setReviews(result.reviews)
+      setPeriodText(result.periodText)
+    }
+    setLoading(false)
+  }
+
+  const canGoPrev = currentPeriodIndex > 0
+  const canGoNext = currentPeriodIndex < availablePeriods.length - 1
+
+  if (loading) {
+    return (
+      <main className="min-h-screen p-6 max-w-md mx-auto">
+        <p className="text-center text-gray-500">로딩 중...</p>
+      </main>
+    )
+  }
+
+  return (
+    <main className="min-h-screen p-6 max-w-md mx-auto">
+      <section className="mb-8">
+        {availablePeriods.length === 0 ? (
+          <>
+            <h2 className="text-xl font-semibold mb-2">
+              마감 예정인 서평단 <span className="text-point">0개</span>
+            </h2>
+            <p className="text-gray-500">현재 마감 예정인 서평단이 없습니다.</p>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold">
+                {periodText} 서평단 <span className="text-point">{reviews.length}개</span>
+              </h2>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handlePeriodChange('prev')}
+                  disabled={!canGoPrev || loading}
+                  className={`text-xl ${canGoPrev && !loading ? 'text-point' : 'text-gray-300'}`}
+                >
+                  ◁
+                </button>
+                <button
+                  onClick={() => handlePeriodChange('next')}
+                  disabled={!canGoNext || loading}
+                  className={`text-xl ${canGoNext && !loading ? 'text-point' : 'text-gray-300'}`}
+                >
+                  ▷
+                </button>
+              </div>
+            </div>
+            {reviews.length > 0 ? (
+              <>
+                <ul className="mt-4 space-y-2">
+                  {displayReviews.map((r) => (
+                    <li key={r.id} className="p-4 border rounded">
+                      <p className="font-medium">{r.title}</p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        {r.publisher} | {r.author}
+                      </p>
+                      <p className="text-sm text-point mb-1">{calcDDay(r.deadline)}</p>
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-point underline text-sm mt-1 inline-block"
+                      >
+                        신청하러 가기
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                {reviews.length > 2 && (
+                  <button
+                    onClick={() => setShowAll((prev) => !prev)}
+                    className="mt-2 text-point underline"
+                  >
+                    {showAll ? '접기' : '더보기'}
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className="text-gray-500">현재 {periodText} 서평단이 없습니다.</p>
+            )}
+          </>
+        )}
+      </section>
+
+      <BannerAd />
+      <SearchReviews />
+    </main>
+  )
+}
