@@ -5,7 +5,6 @@ import { getReviewCountsByPeriod } from './reviewUtils'
 export async function generateDynamicMetadata(): Promise<Metadata> {
   const counts = await getReviewCountsByPeriod()
   
-  // 우선순위에 따른 메시지 생성
   let title = "📚 책 서평단 알림"
   let description = "새로운 서평단 모집 정보를 확인하세요!"
   
@@ -66,7 +65,6 @@ export async function generateDynamicMetadata(): Promise<Metadata> {
   }
 }
 
-// 기본 메타데이터 (에러 시 사용)
 export const defaultMetadata: Metadata = {
   title: '📚 책 서평단 알림',
   description: '새로운 서평단 모집 정보를 확인하세요!',
