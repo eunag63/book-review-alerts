@@ -102,7 +102,10 @@ export default function HomePage() {
                       <p className="text-sm text-gray-600 mb-1">
                         {r.publisher} | {r.author}
                       </p>
-                      <p className="text-sm text-point mb-1">{calcDDay(r.deadline)}</p>
+                      {(() => {
+                        const dday = calcDDay(r.deadline)
+                        return dday !== 'D-day' ? <p className="text-sm text-point mb-1">{dday}</p> : null
+                      })()}
                       <a
                         href={r.url}
                         target="_blank"
