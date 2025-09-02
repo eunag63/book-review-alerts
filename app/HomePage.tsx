@@ -109,7 +109,7 @@ export default function HomePage() {
                       )}
                       <p className="font-medium pr-12">{r.title}</p>
                       <p className="text-sm text-gray-600 mb-1">
-                        {r.publisher} | {r.author}
+                        {[r.publisher, r.author, r.genre].filter(Boolean).join(' | ')}
                       </p>
                       {(() => {
                         const dday = calcDDay(r.deadline)
