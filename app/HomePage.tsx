@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Review } from '../lib/types'
-import { getReviewsByPeriod, getAvailablePeriods, calcDDay } from '../lib/reviewUtils'
+import { getReviewsByPeriod, getAvailablePeriods, calcDDay, isCreatedToday, isDeadlineValid } from '../lib/reviewUtils'
 // import BannerAd from './components/BannerAd'
 import SearchReviews from './components/SearchReviews'
 
@@ -14,7 +14,8 @@ export default function HomePage() {
   const [periodText, setPeriodText] = useState('')
   const [loading, setLoading] = useState(true)
   const [showAll, setShowAll] = useState(false)
-  const displayReviews = showAll ? reviews : reviews.slice(0, 2)
+  const validReviews = reviews.filter(isDeadlineValid)
+  const displayReviews = showAll ? validReviews : validReviews.slice(0, 2)
 
   useEffect(() => {
     async function loadInitialData() {
@@ -93,12 +94,20 @@ export default function HomePage() {
                 </button>
               </div>
             </div>
-            {reviews.length > 0 ? (
+            {validReviews.length > 0 ? (
               <>
                 <ul className="mt-4 space-y-2">
                   {displayReviews.map((r) => (
-                    <li key={r.id} className="p-4 border rounded">
-                      <p className="font-medium">{r.title}</p>
+                    <li key={r.id} className="p-4 border rounded relative">
+                      {isCreatedToday(r) && (
+                        <span 
+                          className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
+                          style={{ backgroundColor: '#80FD8F', fontSize: '10px' }}
+                        >
+                          NEW
+                        </span>
+                      )}
+                      <p className="font-medium pr-12">{r.title}</p>
                       <p className="text-sm text-gray-600 mb-1">
                         {r.publisher} | {r.author}
                       </p>
@@ -117,7 +126,7 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                {reviews.length > 2 && (
+                {validReviews.length > 2 && (
                   <div className="pt-3 mt-3">
                     <button
                       onClick={() => setShowAll((prev) => !prev)}

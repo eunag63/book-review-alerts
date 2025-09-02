@@ -9,5 +9,6 @@ export interface Review {
     author_gender: string
     nationality: string
     type: string        
-    category: string   
+    category: string
+    created_at?: string
   }

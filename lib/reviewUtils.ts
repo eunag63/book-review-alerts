@@ -31,6 +31,26 @@ export function calcDDay(deadline: string): string {
   return diff <= 0 ? 'D-day' : `D-${diff}`
 }
 
+export function isCreatedToday(review: Review): boolean {
+  const today = getKoreanDate()
+  const todayString = getDateString(today)
+  
+  // created_at이 있으면 그걸 기준으로, 없으면 항상 false
+  if (review.created_at) {
+    const createdDate = review.created_at.split('T')[0] // YYYY-MM-DD 추출
+    return createdDate === todayString
+  }
+  
+  return false
+}
+
+export function isDeadlineValid(review: Review): boolean {
+  const today = getKoreanDate()
+  const deadline = new Date(review.deadline)
+  // 마감일이 오늘 이후이거나 오늘인 경우만 유효
+  return deadline >= today || deadline.toDateString() === today.toDateString()
+}
+
 // 기간별 서평단 조회 (상세 정보 포함)
 export async function getReviewsByPeriod(period: string) {
   const today = getKoreanDate()

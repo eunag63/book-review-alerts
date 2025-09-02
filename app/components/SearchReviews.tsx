@@ -3,20 +3,23 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import type { Review } from '../../lib/types'
+import { isCreatedToday, isDeadlineValid } from '../../lib/reviewUtils'
 import KeywordFilter from './KeywordFilter'
 
 export default function SearchReviews() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Review[]>([])
   const [loading, setLoading] = useState(false)
+  const [displayCount, setDisplayCount] = useState(5)
 
   // 전체 리뷰를 불러오는 함수
   const loadAllReviews = useCallback(async () => {
     const { data, error } = await supabase.from('reviews').select('*')
     if (!error && data) {
-      const list = data as Review[]
+      const list = (data as Review[]).filter(isDeadlineValid)
       list.sort((a, b) => b.id - a.id) // 최신순 정렬
       setResults(list)
+      setDisplayCount(5) // 초기화
     }
   }, [])
 
@@ -51,11 +54,12 @@ export default function SearchReviews() {
           `publisher.ilike.%${query}%`
         )
       if (!error && data) {
-        const list = data as Review[]
+        const list = (data as Review[]).filter(isDeadlineValid)
         list.sort(
           (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
         )
         setResults(list)
+        setDisplayCount(5) // 초기화
       }
       setLoading(false)
     }, 300)
@@ -89,9 +93,10 @@ export default function SearchReviews() {
     
     const { data, error } = await queryBuilder
     if (!error && data) {
-      const list = data as Review[]
+      const list = (data as Review[]).filter(isDeadlineValid)
       list.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
       setResults(list)
+      setDisplayCount(5) // 초기화
     }
     setLoading(false)
   }, [loadAllReviews])
@@ -119,26 +124,46 @@ export default function SearchReviews() {
       )}
 
       {!loading && results.length > 0 && (
-        <ul className="mt-4 space-y-2">
-          {results.map((r) => (
-            <li key={r.id} className="p-4 border rounded">
-              <p className="font-medium">{r.title}</p>
-              <p className="text-sm text-gray-600 mb-1">
-                {r.publisher} | {r.author}
-              </p>
-              <p className="text-sm text-point mb-1">{calcDDay(r.deadline)}</p>
-              <a
-                href={r.url}
-                onClick={() => handleClick(r.id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-point underline text-sm mt-1 inline-block"
+        <>
+          <ul className="mt-4 space-y-2">
+            {results.slice(0, displayCount).map((r) => (
+              <li key={r.id} className="p-4 border rounded relative">
+                {isCreatedToday(r) && (
+                  <span 
+                    className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
+                    style={{ backgroundColor: '#80FD8F', fontSize: '10px' }}
+                  >
+                    NEW
+                  </span>
+                )}
+                <p className="font-medium pr-12">{r.title}</p>
+                <p className="text-sm text-gray-600 mb-1">
+                  {r.publisher} | {r.author}
+                </p>
+                <p className="text-sm text-point mb-1">{calcDDay(r.deadline)}</p>
+                <a
+                  href={r.url}
+                  onClick={() => handleClick(r.id)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-point underline text-sm mt-1 inline-block"
+                >
+                  신청하러 가기
+                </a>
+              </li>
+            ))}
+          </ul>
+          {displayCount < results.length && (
+            <div className="pt-3 mt-3">
+              <button
+                onClick={() => setDisplayCount(prev => prev + 5)}
+                className="w-full text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
-                신청하러 가기
-              </a>
-            </li>
-          ))}
-        </ul>
+                ▽ 더보기
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
