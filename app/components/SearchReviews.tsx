@@ -1,14 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import type { Review } from '../../lib/types'
-import RecommendationChips from './RecommendationChips'
+import KeywordFilter from './KeywordFilter'
 
 export default function SearchReviews() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Review[]>([])
   const [loading, setLoading] = useState(false)
+
+  // 전체 리뷰를 불러오는 함수
+  const loadAllReviews = useCallback(async () => {
+    const { data, error } = await supabase.from('reviews').select('*')
+    if (!error && data) {
+      const list = data as Review[]
+      list.sort((a, b) => b.id - a.id) // 최신순 정렬
+      setResults(list)
+    }
+  }, [])
+
+  // 컴포넌트 마운트시 전체 리스트 로드
+  useEffect(() => {
+    loadAllReviews()
+  }, [loadAllReviews])
 
   const calcDDay = (deadline: string) => {
     const today = new Date()
@@ -22,7 +37,8 @@ export default function SearchReviews() {
   useEffect(() => {
     const timeout = setTimeout(async () => {
       if (!query) {
-        setResults([])
+        // 검색어가 없으면 전체 리스트 다시 로드
+        loadAllReviews()
         return
       }
       setLoading(true)
@@ -44,24 +60,41 @@ export default function SearchReviews() {
       setLoading(false)
     }, 300)
     return () => clearTimeout(timeout)
-  }, [query])
+  }, [query, loadAllReviews])
 
-  // 메타데이터 기반 검색 (추천 키워드 클릭)
-  const searchByKeyword = async (kw: string) => {
+  // 키워드 필터링
+  const searchByFilters = useCallback(async (filters: { genre?: string; authorGender?: string; nationality?: string }) => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('reviews')
-      .select('*')
-      .or(
-        `genre.eq.${kw},author_gender.eq.${kw},nationality.eq.${kw},type.eq.${kw},category.eq.${kw}`
-      )
+    
+    // 필터가 없으면 전체 데이터 가져오기
+    if (Object.keys(filters).length === 0) {
+      await loadAllReviews()
+      setLoading(false)
+      return
+    }
+    
+    // 필터가 있으면 조건에 맞는 데이터만 가져오기
+    let queryBuilder = supabase.from('reviews').select('*')
+    
+    if (filters.genre) {
+      queryBuilder = queryBuilder.eq('category', filters.genre)
+    }
+    if (filters.authorGender) {
+      const dbValue = filters.authorGender === '여성 작가' ? '여자' : '남자'
+      queryBuilder = queryBuilder.eq('author_gender', dbValue)
+    }
+    if (filters.nationality) {
+      queryBuilder = queryBuilder.eq('nationality', filters.nationality)
+    }
+    
+    const { data, error } = await queryBuilder
     if (!error && data) {
       const list = data as Review[]
       list.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
       setResults(list)
     }
     setLoading(false)
-  }
+  }, [loadAllReviews])
 
   const handleClick = async (reviewId: number) => {
     await supabase.from('log_clicks').insert([{ review_id: reviewId }])
@@ -77,7 +110,7 @@ export default function SearchReviews() {
         className="w-full border-b border-gray-300 pb-1 focus:border-point focus:outline-none mb-4"
       />
 
-      <RecommendationChips onSelect={searchByKeyword} />
+      <KeywordFilter onFilter={searchByFilters} />
 
       {loading && <p className="text-sm text-gray-500 mt-2">검색 중...</p>}
 

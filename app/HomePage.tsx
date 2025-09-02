@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import type { Review } from '../lib/types'
 import { getReviewsByPeriod, getAvailablePeriods, calcDDay } from '../lib/reviewUtils'
-import BannerAd from './components/BannerAd'
+// import BannerAd from './components/BannerAd'
 import SearchReviews from './components/SearchReviews'
 
 export default function HomePage() {
@@ -135,7 +135,7 @@ export default function HomePage() {
         )}
       </section>
 
-      <BannerAd />
+      {/* <BannerAd /> */}
       <SearchReviews />
     </main>
   )
