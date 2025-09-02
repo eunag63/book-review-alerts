@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
+            background: '#000000',
             fontFamily: 'system-ui, sans-serif',
             padding: '40px',
           }}
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
           {/* 하얀 테두리 컨테이너 */}
           <div
             style={{
-              border: '2px solid rgba(79, 209, 199, 0.3)',
+              border: '2px solid white',
               borderRadius: '20px',
               padding: '40px',
               width: '100%',
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'rgba(79, 209, 199, 0.02)',
+              background: 'transparent',
             }}
           >
             {/* 내용 */}
@@ -85,8 +85,7 @@ export async function GET(request: NextRequest) {
                 }}
               >
                 <span>{mainText}</span>
-                <span style={{ color: '#4fd1c7', fontWeight: '900', textShadow: '0 0 10px rgba(79, 209, 199, 0.5)' }}>{count}</span>
-                <span>개</span>
+                <span>{count}개</span>
               </div>
               
               {/* 배지 */}
@@ -94,7 +93,7 @@ export async function GET(request: NextRequest) {
                 <div
                   style={{
                     display: 'flex',
-                    background: '#4fd1c7',
+                    background: '#80FD8F',
                     color: '#000',
                     padding: '16px 40px',
                     borderRadius: '40px',
@@ -127,7 +126,7 @@ export async function GET(request: NextRequest) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
+            background: '#000000',
             fontFamily: 'system-ui, sans-serif',
             padding: '40px',
           }}
