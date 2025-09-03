@@ -91,7 +91,7 @@ export default function KeywordFilter({ onFilter }: KeywordFilterProps) {
   return (
     <div className="mb-4">
       <div className="flex items-center gap-2 mb-3">
-        <h3 className="text-sm font-semibold">✨ 키워드 필터</h3>
+        <h3 className="text-sm font-semibold">🍀 키워드 필터</h3>
       </div>
       
       {/* 첫 번째 줄: 장르 */}
