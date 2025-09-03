@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = { title: '프리북 - 책 서평단 모음' };
 
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="text-center p-4 text-gray-500 text-sm">
           <p>COPYRIGHT © freebook. All rights reserved.</p>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
