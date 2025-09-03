@@ -79,14 +79,6 @@ export default function KeywordFilter({ onFilter }: KeywordFilterProps) {
     onFilter(cleanFilters)
   }
 
-  const clearAll = () => {
-    setSelectedGenre('')
-    setSelectedAuthorGender('')
-    setSelectedNationality('')
-    onFilter({})
-  }
-
-  const hasActiveFilters = selectedGenre || selectedAuthorGender || selectedNationality
 
   return (
     <div className="mb-4">

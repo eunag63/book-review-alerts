@@ -5,8 +5,8 @@ import { getReviewCountsByPeriod } from './reviewUtils'
 export async function generateDynamicMetadata(): Promise<Metadata> {
   const counts = await getReviewCountsByPeriod()
   
-  let title = "프리북 - 책 서평단 모음"
-  let description = "새로운 서평단 모집 정보를 확인하세요!"
+  const title = "프리북 - 책 서평단 모음"
+  const description = "새로운 서평단 모집 정보를 확인하세요!"
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com'
   const ogImageUrl = `${baseUrl}/api/og-image?today=${counts.today}&thisWeek=${counts.thisWeek}&nextWeek=${counts.nextWeek}`
