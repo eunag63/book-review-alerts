@@ -32,16 +32,19 @@ export function calcDDay(deadline: string): string {
 }
 
 export function isCreatedToday(review: Review): boolean {
-  const today = getKoreanDate()
-  const todayString = getDateString(today)
+  if (!review.created_at) return false
   
-  // created_at이 있으면 그걸 기준으로, 없으면 항상 false
-  if (review.created_at) {
-    const createdDate = review.created_at.split('T')[0] // YYYY-MM-DD 추출
-    return createdDate === todayString
-  }
+  // 현재 한국 시간 기준 오늘 날짜
+  const now = new Date()
+  const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000))
+  const todayKST = kstNow.toISOString().split('T')[0]
   
-  return false
+  // created_at을 한국 시간으로 변환
+  const createdUTC = new Date(review.created_at)
+  const createdKST = new Date(createdUTC.getTime() + (9 * 60 * 60 * 1000))
+  const createdDateKST = createdKST.toISOString().split('T')[0]
+  
+  return createdDateKST === todayKST
 }
 
 export function isDeadlineValid(review: Review): boolean {
