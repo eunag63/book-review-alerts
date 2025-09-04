@@ -20,7 +20,7 @@ export async function assignBadgesToReviews(reviews: Review[]): Promise<ReviewWi
   return reviews.map(review => ({
     ...review,
     clickCount: 0,
-    badge: badgeMap.get(review.id) || null
+    badge: (badgeMap.get(review.id) as '🔥 인기 서평단' | '⭐ 주목받는 서평단' | '🚀 급상승 서평단' | null) || null
   }))
 }
 
