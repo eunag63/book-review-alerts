@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../../lib/supabaseClient'
 import type { Review } from '../../lib/types'
+import type { ReviewWithBadge } from '../../lib/clickAnalytics'
 import { isCreatedToday, isDeadlineValid } from '../../lib/reviewUtils'
+import { assignBadgesToReviews } from '../../lib/clickAnalytics'
 import KeywordFilter from './KeywordFilter'
 
 export default function SearchReviews() {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Review[]>([])
+  const [results, setResults] = useState<ReviewWithBadge[]>([])
   const [loading, setLoading] = useState(false)
   const [displayCount, setDisplayCount] = useState(5)
 
@@ -18,7 +20,9 @@ export default function SearchReviews() {
     if (!error && data) {
       const list = (data as Review[]).filter(isDeadlineValid)
       list.sort((a, b) => b.id - a.id) // 최신순 정렬
-      setResults(list)
+      // 배지 할당
+      const listWithBadges = await assignBadgesToReviews(list)
+      setResults(listWithBadges)
       setDisplayCount(5) // 초기화
     }
   }, [])
@@ -58,7 +62,9 @@ export default function SearchReviews() {
         list.sort(
           (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
         )
-        setResults(list)
+        // 검색 결과에도 배지 할당
+        const listWithBadges = await assignBadgesToReviews(list)
+        setResults(listWithBadges)
         setDisplayCount(5) // 초기화
       }
       setLoading(false)
@@ -95,7 +101,9 @@ export default function SearchReviews() {
     if (!error && data) {
       const list = (data as Review[]).filter(isDeadlineValid)
       list.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
-      setResults(list)
+      // 키워드 필터 결과에도 배지 할당
+      const listWithBadges = await assignBadgesToReviews(list)
+      setResults(listWithBadges)
       setDisplayCount(5) // 초기화
     }
     setLoading(false)
@@ -128,6 +136,7 @@ export default function SearchReviews() {
           <ul className="mt-4 space-y-2">
             {results.slice(0, displayCount).map((r) => (
               <li key={r.id} className="p-4 border rounded relative">
+                {/* NEW 배지 */}
                 {isCreatedToday(r) && (
                   <span 
                     className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
@@ -141,15 +150,31 @@ export default function SearchReviews() {
                   {[r.publisher, r.author, r.genre].filter(Boolean).join(' | ')}
                 </p>
                 <p className="text-sm text-point mb-1">{calcDDay(r.deadline)}</p>
-                <a
-                  href={r.url}
-                  onClick={() => handleClick(r.id)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-point underline text-sm mt-1 inline-block"
-                >
-                  신청하러 가기
-                </a>
+                <div className="flex justify-between items-center">
+                  <a
+                    href={r.url}
+                    onClick={() => handleClick(r.id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-point underline text-sm mt-1 inline-block"
+                  >
+                    신청하러 가기
+                  </a>
+                  {/* 배지를 오른쪽 아래에 작은 글자로 */}
+                  {r.badge && (
+                    <span 
+                      className={`text-xs mt-1 font-medium ${
+                        r.badge.includes('🔥') ? 'animate-bounce' :
+                        r.badge.includes('⭐') ? 'animate-pulse' :
+                        r.badge.includes('🚀') ? 'animate-ping' :
+                        ''
+                      }`}
+                      style={{ color: '#80FD8F' }}
+                    >
+                      {r.badge}
+                    </span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

@@ -3,14 +3,16 @@
 
 import { useState, useEffect } from 'react'
 import type { Review } from '../lib/types'
+import type { ReviewWithBadge } from '../lib/clickAnalytics'
 import { getReviewsByPeriod, getAvailablePeriods, calcDDay, isCreatedToday, isDeadlineValid } from '../lib/reviewUtils'
+import { getReviewClickCounts, assignBadgesToReviews } from '../lib/clickAnalytics'
 // import BannerAd from './components/BannerAd'
 import SearchReviews from './components/SearchReviews'
 
 export default function HomePage() {
   const [availablePeriods, setAvailablePeriods] = useState<string[]>([])
   const [currentPeriodIndex, setCurrentPeriodIndex] = useState(0)
-  const [reviews, setReviews] = useState<Review[]>([])
+  const [reviews, setReviews] = useState<ReviewWithBadge[]>([])
   const [periodText, setPeriodText] = useState('')
   const [loading, setLoading] = useState(true)
   const [showAll, setShowAll] = useState(false)
@@ -25,7 +27,9 @@ export default function HomePage() {
       if (available.length > 0) {
         const initial = available[0]
         const initialData = await getReviewsByPeriod(initial)
-        setReviews(initialData.reviews)
+        // 배지 할당
+        const reviewsWithBadges = await assignBadgesToReviews(initialData.reviews)
+        setReviews(reviewsWithBadges)
         setPeriodText(initialData.periodText)
       }
       setLoading(false)
@@ -44,7 +48,9 @@ export default function HomePage() {
     const result = await getReviewsByPeriod(period)
     if (!result.error) {
       setCurrentPeriodIndex(newIndex)
-      setReviews(result.reviews)
+      // 배지 할당
+      const reviewsWithBadges = await assignBadgesToReviews(result.reviews)
+      setReviews(reviewsWithBadges)
       setPeriodText(result.periodText)
     }
     setLoading(false)
@@ -75,7 +81,7 @@ export default function HomePage() {
           <>
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-semibold">
-                {periodText} 서평단 <span className="text-point">{reviews.length}개</span>
+                {periodText} 서평단 <span className="text-point">{validReviews.length}개</span>
               </h2>
               <div className="flex items-center gap-1">
                 <button
@@ -99,6 +105,7 @@ export default function HomePage() {
                 <ul className="mt-4 space-y-2">
                   {displayReviews.map((r) => (
                     <li key={r.id} className="p-4 border rounded relative">
+                      {/* NEW 배지 */}
                       {isCreatedToday(r) && (
                         <span 
                           className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
@@ -115,14 +122,30 @@ export default function HomePage() {
                         const dday = calcDDay(r.deadline)
                         return dday !== 'D-day' ? <p className="text-sm text-point mb-1">{dday}</p> : null
                       })()}
-                      <a
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-point underline text-sm mt-1 inline-block"
-                      >
-                        신청하러 가기
-                      </a>
+                      <div className="flex justify-between items-center">
+                        <a
+                          href={r.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-point underline text-sm mt-1 inline-block"
+                        >
+                          신청하러 가기
+                        </a>
+                        {/* 배지를 오른쪽 아래에 작은 글자로 */}
+                        {r.badge && (
+                          <span 
+                            className={`text-xs mt-1 font-medium ${
+                              r.badge.includes('🔥') ? 'animate-bounce' :
+                              r.badge.includes('⭐') ? 'animate-pulse' :
+                              r.badge.includes('🚀') ? 'animate-ping' :
+                              ''
+                            }`}
+                            style={{ color: '#80FD8F' }}
+                          >
+                            {r.badge}
+                          </span>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
