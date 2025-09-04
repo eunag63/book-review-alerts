@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import type { Review } from '../lib/types'
 import type { ReviewWithBadge } from '../lib/clickAnalytics'
 import { getReviewsByPeriod, getAvailablePeriods, calcDDay, isCreatedToday, isDeadlineValid } from '../lib/reviewUtils'
-import { getReviewClickCounts, assignBadgesToReviews } from '../lib/clickAnalytics'
+import { assignBadgesToReviews } from '../lib/clickAnalytics'
 // import BannerAd from './components/BannerAd'
 import SearchReviews from './components/SearchReviews'
 
