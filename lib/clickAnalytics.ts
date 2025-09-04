@@ -47,7 +47,7 @@ export async function getReviewsWithBadges(): Promise<ReviewWithBadge[]> {
   
   clickData?.forEach(log => {
     const reviewId = log.review_id
-    const reviewData = (log.reviews as any)
+    const reviewData = (log.reviews as unknown) as Review
     
     if (reviewClickMap.has(reviewId)) {
       reviewClickMap.get(reviewId)!.clickCount++
