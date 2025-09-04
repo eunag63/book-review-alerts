@@ -86,9 +86,9 @@ export async function getReviewsWithBadges(): Promise<ReviewWithBadge[]> {
     badge: null
   }))
   
-  // 5. 최근 3일 클릭수 집계 (급상승 배지용)
-  const threeDaysAgo = new Date()
-  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+  // 5. 최근 1시간 클릭수 집계 (급상승 배지용)
+  const oneHourAgo = new Date()
+  oneHourAgo.setHours(oneHourAgo.getHours() - 1)
   
   const { data: recentClickData } = await supabase
     .from('log_clicks')
@@ -97,7 +97,7 @@ export async function getReviewsWithBadges(): Promise<ReviewWithBadge[]> {
       reviews!inner(id)
     `)
     .gte('reviews.deadline', today)
-    .gte('occurred_at', threeDaysAgo.toISOString())
+    .gte('occurred_at', oneHourAgo.toISOString())
   
   const recentClickCounts = new Map<number, number>()
   recentClickData?.forEach(log => {
@@ -131,7 +131,7 @@ export async function getReviewsWithBadges(): Promise<ReviewWithBadge[]> {
     })
   }
   
-  // 3. 🚀 급상승 서평단 - 최근 3일 클릭수 1위 (아직 배지 없는 것)
+  // 3. 🚀 급상승 서평단 - 최근 1시간 클릭수 1위 (아직 배지 없는 것)
   if (sortedByRecent.length > 0 && sortedByRecent[0].recentClicks > 0) {
     const topRecent = sortedByRecent[0]
     const targetReview = reviewsWithClicks.find(r => r.id === topRecent.id)

@@ -163,12 +163,7 @@ export default function SearchReviews() {
                   {/* 배지를 오른쪽 아래에 작은 글자로 */}
                   {r.badge && (
                     <span 
-                      className={`text-xs mt-1 font-medium ${
-                        r.badge.includes('🔥') ? 'animate-bounce' :
-                        r.badge.includes('⭐') ? 'animate-pulse' :
-                        r.badge.includes('🚀') ? 'animate-ping' :
-                        ''
-                      }`}
+                      className="text-xs mt-1 font-medium"
                       style={{ color: '#80FD8F' }}
                     >
                       {r.badge}
