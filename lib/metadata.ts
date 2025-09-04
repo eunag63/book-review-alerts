@@ -9,10 +9,8 @@ export async function generateDynamicMetadata(): Promise<Metadata> {
   const description = "새로운 서평단 모집 정보를 확인하세요!"
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com'
-  // 데이터 기반 해시 생성 (데이터가 같으면 같은 URL)
-  const dataString = `${counts.today}-${counts.thisWeek}-${counts.nextWeek}`
-  const hash = Buffer.from(dataString).toString('base64').replace(/[^a-zA-Z0-9]/g, '')
-  const ogImageUrl = `${baseUrl}/api/og-image?today=${counts.today}&thisWeek=${counts.thisWeek}&nextWeek=${counts.nextWeek}&v=${hash}`
+  const today = new Date().toISOString().split('T')[0].replace(/-/g, '')
+  const ogImageUrl = `${baseUrl}/api/og-image?today=${counts.today}&thisWeek=${counts.thisWeek}&nextWeek=${counts.nextWeek}&d=${today}`
   
   return {
     title,
@@ -20,7 +18,7 @@ export async function generateDynamicMetadata(): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: baseUrl,
+      url: `${baseUrl}?d=${today}`,
       siteName: '책 서평단 알림',
       images: [
         {
