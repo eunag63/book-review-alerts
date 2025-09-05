@@ -2,11 +2,12 @@ import { supabase } from '../../../lib/supabaseClient'
 import { Metadata } from 'next'
 import RedirectClient from './RedirectClient'
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
   const { data } = await supabase
     .from('reviews')
     .select('title, publisher, author, genre')
-    .eq('id', params.id)
+    .eq('id', id)
     .single()
 
   if (!data) {
@@ -36,6 +37,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-export default function RedirectPage({ params }: { params: { id: string } }) {
-  return <RedirectClient id={params.id} />
+export default async function RedirectPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  return <RedirectClient id={id} />
 }
