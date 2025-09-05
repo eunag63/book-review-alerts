@@ -26,11 +26,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title,
       description,
-      images: ['/api/og-image'], // 기본 OG 이미지 사용
       type: 'website'
     },
     twitter: {
-      card: 'summary_large_image',
+      card: 'summary',
       title,
       description
     }

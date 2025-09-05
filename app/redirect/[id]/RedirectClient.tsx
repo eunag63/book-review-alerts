@@ -27,7 +27,8 @@ export default function RedirectClient({ id }: { id: string }) {
           .insert([{ review_id: parseInt(id) }])
 
         // 3. 실제 서평단 URL로 리다이렉트
-        window.location.href = review.url
+        console.log('리다이렉트 URL:', review.url)
+        // window.location.href = review.url // 개발용으로 잠시 비활성화
       } catch (error) {
         console.error('리다이렉트 오류:', error)
         window.location.href = '/'
