@@ -34,17 +34,13 @@ export function calcDDay(deadline: string): string {
 export function isCreatedToday(review: Review): boolean {
   if (!review.created_at) return false
   
-  // 현재 한국 시간 기준 오늘 날짜
-  const now = new Date()
-  const kstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000))
-  const todayKST = kstNow.toISOString().split('T')[0]
+  // 현재 한국 시간으로 오늘 날짜 구하기
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
   
   // created_at을 한국 시간으로 변환
-  const createdUTC = new Date(review.created_at)
-  const createdKST = new Date(createdUTC.getTime() + (9 * 60 * 60 * 1000))
-  const createdDateKST = createdKST.toISOString().split('T')[0]
+  const createdKST = new Date(review.created_at).toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
   
-  return createdDateKST === todayKST
+  return createdKST === today
 }
 
 export function isDeadlineValid(review: Review): boolean {
