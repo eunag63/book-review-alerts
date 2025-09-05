@@ -17,21 +17,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
   }
 
-  const title = `${data.title} 서평단 모집`
-  const description = `${data.publisher} | ${data.author} | ${data.genre}`
+  const title = `📖 『${data.title}』 서평단 모집`
 
   return {
     title,
-    description,
     openGraph: {
       title,
-      description,
       type: 'website'
     },
     twitter: {
       card: 'summary',
-      title,
-      description
+      title
     }
   }
 }
