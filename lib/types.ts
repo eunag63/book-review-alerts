@@ -10,5 +10,7 @@ export interface Review {
     nationality: string
     type: string        
     category: string
+    source?: string
+    registration_id?: number
     created_at?: string
   }
