@@ -1,54 +1,41 @@
-'use client'
-
-import { useEffect } from 'react'
-import { useParams } from 'next/navigation'
 import { supabase } from '../../../lib/supabaseClient'
+import { Metadata } from 'next'
+import RedirectClient from './RedirectClient'
 
-export default function RedirectPage() {
-  const params = useParams()
-  const id = params.id as string
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const { data } = await supabase
+    .from('reviews')
+    .select('title, publisher, author, genre')
+    .eq('id', params.id)
+    .single()
 
-  useEffect(() => {
-    async function handleRedirect() {
-      try {
-        // 1. 리뷰 정보 가져오기
-        const { data: review, error } = await supabase
-          .from('reviews')
-          .select('url')
-          .eq('id', id)
-          .single()
-
-        if (error || !review) {
-          console.error('리뷰를 찾을 수 없음:', error)
-          // 메인 페이지로 리다이렉트
-          window.location.href = '/'
-          return
-        }
-
-        // 2. 클릭수 로깅
-        await supabase
-          .from('log_clicks')
-          .insert([{ review_id: parseInt(id) }])
-
-        // 3. 실제 서평단 URL로 리다이렉트
-        window.location.href = review.url
-      } catch (error) {
-        console.error('리다이렉트 오류:', error)
-        window.location.href = '/'
-      }
+  if (!data) {
+    return {
+      title: '서평단',
+      description: '서평단 신청'
     }
+  }
 
-    if (id) {
-      handleRedirect()
+  const title = `${data.title} 서평단 모집`
+  const description = `${data.publisher} | ${data.author} | ${data.genre}`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: ['/api/og-image'], // 기본 OG 이미지 사용
+      type: 'website'
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description
     }
-  }, [id])
+  }
+}
 
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-        <p className="text-gray-600">서평단 페이지로 이동 중...</p>
-      </div>
-    </div>
-  )
+export default function RedirectPage({ params }: { params: { id: string } }) {
+  return <RedirectClient id={params.id} />
 }
