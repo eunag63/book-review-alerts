@@ -9,6 +9,7 @@ export default function RegisterPage() {
     author: '',
     publisher: '',
     link: '',
+    deadline: '',
     genre: '',
     authorGender: '',
     email: '',
@@ -163,6 +164,20 @@ export default function RegisterPage() {
             required
             className="w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white placeholder-gray-500"
             placeholder="https://..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-white mb-2">
+            마감 날짜 <span className="text-red-400">*</span>
+          </label>
+          <input
+            type="date"
+            name="deadline"
+            value={formData.deadline}
+            onChange={handleInputChange}
+            required
+            className="w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
           />
         </div>
 

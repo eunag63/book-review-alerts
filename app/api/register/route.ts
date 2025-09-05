@@ -4,12 +4,24 @@ import { supabase } from '../../../lib/supabaseClient';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, author, publisher, link, genre, authorGender, email, description } = body;
+    const { title, author, publisher, link, deadline, genre, authorGender, email, description } = body;
 
     // 필수 필드 검증
-    if (!title || !author || !publisher || !link || !email || !description) {
+    if (!title || !author || !publisher || !link || !deadline || !email || !description) {
       return NextResponse.json(
         { error: '필수 필드가 누락되었습니다.' },
+        { status: 400 }
+      );
+    }
+
+    // 마감 날짜 검증 (과거 날짜 체크)
+    const deadlineDate = new Date(deadline);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (deadlineDate < today) {
+      return NextResponse.json(
+        { error: '마감 날짜는 오늘 이후여야 합니다.' },
         { status: 400 }
       );
     }
@@ -49,6 +61,7 @@ export async function POST(request: NextRequest) {
           author,
           publisher,
           link,
+          deadline,
           category: genre,
           author_gender: convertedGender,
           email,
