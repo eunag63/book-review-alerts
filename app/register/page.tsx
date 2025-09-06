@@ -211,7 +211,7 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold mb-4">서평단 등록하기</h1>
         <p className="text-[#80FD8F] mb-2 text-sm font-medium">더 많은 독자들에게 여러분의 책을 알려보세요 🍀</p>
         <p className="text-gray-400 text-sm">
-          문의 사항이 있으신 경우 admin@freebook.kr 이용해주세요
+          문의 사항이 있으신 경우 hello@freebook.kr 이용해주세요
         </p>
       </div>
 

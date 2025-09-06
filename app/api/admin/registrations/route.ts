@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../../lib/supabaseClient';
+import { getEmailTemplate } from '../../../../lib/emailTemplates';
 
 // 대기 중인 등록 건 조회
 export async function GET() {
@@ -44,24 +45,24 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // 1. 원본 데이터 조회 (이메일 발송용으로도 필요)
+    const { data: registration, error: fetchError } = await supabase
+      .from('review_registrations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !registration) {
+      return NextResponse.json(
+        { error: '등록 데이터를 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
     if (action === 'approve') {
       // 승인 처리: reviews 테이블로 데이터 복사
-      
-      // 1. 원본 데이터 조회
-      const { data: registration, error: fetchError } = await supabase
-        .from('review_registrations')
-        .select('*')
-        .eq('id', id)
-        .single();
 
-      if (fetchError || !registration) {
-        return NextResponse.json(
-          { error: '등록 데이터를 찾을 수 없습니다.' },
-          { status: 404 }
-        );
-      }
-
-      // 2. reviews 테이블 처리
+      // reviews 테이블 처리
       if (registration.existing_review_id) {
         // 기존 서평단 업데이트: source와 registration_id만 업데이트
         const { error: updateError } = await supabase
@@ -109,7 +110,7 @@ export async function PUT(request: NextRequest) {
         }
       }
 
-      // 3. 상태를 approved로 변경
+      // 상태를 approved로 변경
       const { error: updateError } = await supabase
         .from('review_registrations')
         .update({ status: 'approved' })
@@ -142,6 +143,36 @@ export async function PUT(request: NextRequest) {
         { error: '올바르지 않은 액션입니다.' },
         { status: 400 }
       );
+    }
+
+    // 이메일 발송 - 직접 Resend 호출로 변경
+    console.log('=== 이메일 발송 시작 ===');
+    console.log('받는 사람:', registration.email);
+    console.log('액션:', action);
+    
+    try {
+      const { Resend } = await import('resend');
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      const { subject, htmlContent } = getEmailTemplate({
+        title: registration.title,
+        isApproved: action === 'approve'
+      });
+
+      const result = await resend.emails.send({
+        from: 'Free Book <hello@freebook.kr>',  // 발신자명 변경
+        to: [registration.email],   // 실제 출판사 이메일로 발송
+        subject: subject,
+        html: htmlContent,
+      });
+
+      console.log('=== 이메일 발송 성공 ===');
+      console.log('결과:', result);
+
+    } catch (emailError) {
+      console.error('=== 이메일 발송 오류 ===');
+      console.error('오류 내용:', emailError);
+      // 이메일 발송 실패해도 승인/거부 처리는 완료된 상태로 유지
     }
 
     return NextResponse.json({
