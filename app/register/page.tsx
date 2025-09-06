@@ -1,7 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+
+interface ExistingReview {
+  id: number;
+  title: string;
+  author: string;
+  publisher: string;
+  url: string;
+  deadline: string;
+  genre: string;
+  author_gender: string;
+  category: string;
+}
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -19,9 +31,102 @@ export default function RegisterPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // 검색 관련 상태
+  const [searchResults, setSearchResults] = useState<ExistingReview[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [selectedExistingReview, setSelectedExistingReview] = useState<ExistingReview | null>(null);
+  const [isExistingBook, setIsExistingBook] = useState(false);
+  const [forceNewBook, setForceNewBook] = useState(false); // 새 책으로 강제 등록
+
+  // 제목 검색 함수
+  const searchBooks = useCallback(async (title: string) => {
+    if (title.length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/search-reviews?title=${encodeURIComponent(title)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.results || []);
+        setShowSearchResults(data.results.length > 0);
+      }
+    } catch (error) {
+      console.error('검색 오류:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // debounce를 위한 effect
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (formData.title && !isExistingBook && !forceNewBook) {
+        searchBooks(formData.title);
+      }
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [formData.title, searchBooks, isExistingBook, forceNewBook]);
+
+  // 기존 책 선택 처리
+  const selectExistingBook = (review: ExistingReview) => {
+    setSelectedExistingReview(review);
+    setIsExistingBook(true);
+    setFormData(prev => ({
+      ...prev,
+      title: review.title,
+      author: review.author,
+      publisher: review.publisher,
+      link: review.url,
+      deadline: review.deadline,
+      genre: review.category || review.genre,
+      authorGender: review.author_gender === '여자' ? '여성' : review.author_gender === '남자' ? '남성' : review.author_gender
+    }));
+    setShowSearchResults(false);
+  };
+
+  // 새 책으로 등록
+  const registerAsNewBook = () => {
+    const currentTitle = formData.title;
+    setSelectedExistingReview(null);
+    setIsExistingBook(false);
+    setShowSearchResults(false);
+    setForceNewBook(true); // 새 책으로 강제 등록 상태로 설정
+    
+    // 제목만 남기고 나머지 필드 초기화
+    setFormData({
+      title: currentTitle,
+      author: '',
+      publisher: '',
+      link: '',
+      deadline: '',
+      genre: '',
+      authorGender: '',
+      email: '',
+      description: ''
+    });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
+    // 제목이 변경되면 기존 책 선택 상태 초기화
+    if (name === 'title' && isExistingBook) {
+      setIsExistingBook(false);
+      setSelectedExistingReview(null);
+    }
+    
+    // 제목이 변경되고 새 책으로 강제 등록 상태가 아니면 검색 가능하도록 설정
+    if (name === 'title' && forceNewBook && value !== formData.title) {
+      setForceNewBook(false);
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
     if (error) setError(''); // 입력 시 에러 메시지 제거
   };
@@ -32,12 +137,23 @@ export default function RegisterPage() {
     setError('');
 
     try {
+      // 기존 책인 경우 추가 데이터 포함
+      const submitData = {
+        ...formData,
+        ...(isExistingBook && selectedExistingReview ? {
+          existingReviewId: selectedExistingReview.id,
+          isExistingBook: true
+        } : {
+          isExistingBook: false
+        })
+      };
+
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const data = await response.json();
@@ -107,9 +223,12 @@ export default function RegisterPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 필수 필드들 */}
-        <div>
+        <div className="relative">
           <label className="block text-sm font-medium text-white mb-2">
             제목 <span className="text-red-400">*</span>
+            {isExistingBook && (
+              <span className="ml-2 text-xs text-[#80FD8F]">✓ 기존 등록된 책</span>
+            )}
           </label>
           <input
             type="text"
@@ -119,12 +238,84 @@ export default function RegisterPage() {
             required
             className="w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white placeholder-gray-500"
             placeholder="책 제목을 입력하세요"
+            onFocus={() => {
+              if (searchResults.length > 0 && !isExistingBook && !forceNewBook) {
+                setShowSearchResults(true);
+              }
+            }}
           />
+          
+          {isSearching && (
+            <div className="absolute right-0 top-8 text-gray-400 text-sm">
+              검색 중...
+            </div>
+          )}
+          
+          {/* 검색 결과 드롭다운 */}
+          {showSearchResults && searchResults.length > 0 && !forceNewBook && (
+            <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="p-3 text-xs text-gray-300 border-b border-gray-600">
+                <div className="font-medium mb-1">기존에 등록된 책을 찾았습니다!</div>
+                <div className="text-gray-400">한 줄 소개를 추가하고 싶으시다면 제목을 눌러주세요</div>
+              </div>
+              {searchResults.map((review) => (
+                <button
+                  key={review.id}
+                  type="button"
+                  onClick={() => selectExistingBook(review)}
+                  className="w-full px-3 py-2 text-left hover:bg-gray-700 border-b border-gray-600 last:border-b-0"
+                >
+                  <div className="text-white font-medium">{review.title}</div>
+                  <div className="text-xs text-gray-400">
+                    {review.author} · {review.publisher}
+                  </div>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={registerAsNewBook}
+                className="w-full px-3 py-2 text-left hover:bg-gray-700 text-[#80FD8F] text-sm font-medium"
+              >
+                새로운 책으로 등록하기
+              </button>
+            </div>
+          )}
+          
+          {/* 기존 책 선택 시 안내 */}
+          {isExistingBook && selectedExistingReview && (
+            <div className="mt-2 p-3 bg-green-900/20 border border-green-500 rounded-md">
+              <p className="text-green-400 text-sm font-medium mb-1">
+                기존 등록된 책을 선택했습니다
+              </p>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // TODO: 서평단 정보 수정 페이지로 이동하는 로직 추가 예정
+                    alert('서평단 정보 수정 기능은 곧 추가될 예정입니다.');
+                  }}
+                  className="flex items-center text-xs text-[#80FD8F] hover:text-green-200"
+                >
+                  <span className="mr-1">▷</span>
+                  <span className="underline">서평단 정보 수정하기</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={registerAsNewBook}
+                  className="flex items-center text-xs text-[#80FD8F] hover:text-green-200"
+                >
+                  <span className="mr-1">▷</span>
+                  <span className="underline">새로운 책으로 등록하기</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             작가 <span className="text-red-400">*</span>
+            {isExistingBook && <span className="ml-2 text-xs text-gray-400">자동 입력됨</span>}
           </label>
           <input
             type="text"
@@ -132,7 +323,10 @@ export default function RegisterPage() {
             value={formData.author}
             onChange={handleInputChange}
             required
-            className="w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white placeholder-gray-500"
+            readOnly={isExistingBook}
+            className={`w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white placeholder-gray-500 ${
+              isExistingBook ? 'text-gray-300 cursor-not-allowed' : ''
+            }`}
             placeholder="작가명을 입력하세요"
           />
         </div>
@@ -140,6 +334,7 @@ export default function RegisterPage() {
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             출판사 <span className="text-red-400">*</span>
+            {isExistingBook && <span className="ml-2 text-xs text-gray-400">자동 입력됨</span>}
           </label>
           <input
             type="text"
@@ -147,7 +342,10 @@ export default function RegisterPage() {
             value={formData.publisher}
             onChange={handleInputChange}
             required
-            className="w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white placeholder-gray-500"
+            readOnly={isExistingBook}
+            className={`w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white placeholder-gray-500 ${
+              isExistingBook ? 'text-gray-300 cursor-not-allowed' : ''
+            }`}
             placeholder="출판사명을 입력하세요"
           />
         </div>
@@ -155,6 +353,7 @@ export default function RegisterPage() {
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             링크 <span className="text-red-400">*</span>
+            {isExistingBook && <span className="ml-2 text-xs text-gray-400">자동 입력됨</span>}
           </label>
           <input
             type="url"
@@ -162,7 +361,10 @@ export default function RegisterPage() {
             value={formData.link}
             onChange={handleInputChange}
             required
-            className="w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white placeholder-gray-500"
+            readOnly={isExistingBook}
+            className={`w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white placeholder-gray-500 ${
+              isExistingBook ? 'text-gray-300 cursor-not-allowed' : ''
+            }`}
             placeholder="https://..."
           />
         </div>
@@ -170,6 +372,7 @@ export default function RegisterPage() {
         <div>
           <label className="block text-sm font-medium text-white mb-2">
             마감 날짜 <span className="text-red-400">*</span>
+            {isExistingBook && <span className="ml-2 text-xs text-gray-400">자동 입력됨</span>}
           </label>
           <input
             type="date"
@@ -177,7 +380,10 @@ export default function RegisterPage() {
             value={formData.deadline}
             onChange={handleInputChange}
             required
-            className="w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert"
+            readOnly={isExistingBook}
+            className={`w-full px-0 py-3 border-0 border-b border-gray-600 bg-transparent text-white focus:outline-none focus:border-white [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert ${
+              isExistingBook ? 'text-gray-300 cursor-not-allowed' : ''
+            }`}
           />
         </div>
 
@@ -185,26 +391,33 @@ export default function RegisterPage() {
         <div>
           <label className="block text-sm font-medium text-white mb-3">
             카테고리
+            {isExistingBook && <span className="ml-2 text-xs text-gray-400">자동 선택됨</span>}
           </label>
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setFormData(prev => ({ ...prev, genre: '문학' }))}
+              onClick={() => !isExistingBook && setFormData(prev => ({ ...prev, genre: '문학' }))}
+              disabled={isExistingBook}
               className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                 formData.genre === '문학' 
                   ? 'bg-[#80FD8F] text-black' 
-                  : 'border border-white text-white hover:bg-gray-800'
+                  : isExistingBook
+                    ? 'border border-gray-500 text-gray-400 cursor-not-allowed'
+                    : 'border border-white text-white hover:bg-gray-800'
               }`}
             >
               문학
             </button>
             <button
               type="button"
-              onClick={() => setFormData(prev => ({ ...prev, genre: '비문학' }))}
+              onClick={() => !isExistingBook && setFormData(prev => ({ ...prev, genre: '비문학' }))}
+              disabled={isExistingBook}
               className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                 formData.genre === '비문학' 
                   ? 'bg-[#80FD8F] text-black' 
-                  : 'border border-white text-white hover:bg-gray-800'
+                  : isExistingBook
+                    ? 'border border-gray-500 text-gray-400 cursor-not-allowed'
+                    : 'border border-white text-white hover:bg-gray-800'
               }`}
             >
               비문학
@@ -215,26 +428,33 @@ export default function RegisterPage() {
         <div>
           <label className="block text-sm font-medium text-white mb-3">
             작가 성별
+            {isExistingBook && <span className="ml-2 text-xs text-gray-400">자동 선택됨</span>}
           </label>
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => setFormData(prev => ({ ...prev, authorGender: '여성' }))}
+              onClick={() => !isExistingBook && setFormData(prev => ({ ...prev, authorGender: '여성' }))}
+              disabled={isExistingBook}
               className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                 formData.authorGender === '여성' 
                   ? 'bg-[#80FD8F] text-black' 
-                  : 'border border-white text-white hover:bg-gray-800'
+                  : isExistingBook
+                    ? 'border border-gray-500 text-gray-400 cursor-not-allowed'
+                    : 'border border-white text-white hover:bg-gray-800'
               }`}
             >
               여성
             </button>
             <button
               type="button"
-              onClick={() => setFormData(prev => ({ ...prev, authorGender: '남성' }))}
+              onClick={() => !isExistingBook && setFormData(prev => ({ ...prev, authorGender: '남성' }))}
+              disabled={isExistingBook}
               className={`flex-1 px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                 formData.authorGender === '남성' 
                   ? 'bg-[#80FD8F] text-black' 
-                  : 'border border-white text-white hover:bg-gray-800'
+                  : isExistingBook
+                    ? 'border border-gray-500 text-gray-400 cursor-not-allowed'
+                    : 'border border-white text-white hover:bg-gray-800'
               }`}
             >
               남성

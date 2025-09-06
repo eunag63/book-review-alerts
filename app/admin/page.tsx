@@ -17,6 +17,7 @@ interface RegistrationData {
   description: string;
   status: string;
   created_at: string;
+  existing_review_id?: number;
 }
 
 export default function AdminPage() {
@@ -137,7 +138,18 @@ export default function AdminPage() {
             <ul className="mt-4 space-y-2">
               {registrations.map((reg) => (
                 <li key={reg.id} className="p-4 border rounded relative">
-                  <p className="font-medium pr-12">{reg.title}</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium">{reg.title}</p>
+                    {reg.existing_review_id ? (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-900/30 text-blue-300 border border-blue-500">
+                        기존 서평단 업데이트
+                      </span>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-900/30 text-green-300 border border-green-500">
+                        새 책 등록
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-600 mb-1">
                     {[reg.publisher, reg.author].filter(Boolean).join(' | ')}
                   </p>
@@ -202,43 +214,55 @@ export default function AdminPage() {
                 {registrations.map((reg) => (
                   <div key={reg.id} className="p-4 border border-gray-700 rounded text-sm">
                     <div className="grid grid-cols-1 gap-2">
-                      <div><span style={{ color: '#80FD8F' }}>✓ 제목:</span> {reg.title}</div>
-                      <div><span style={{ color: '#80FD8F' }}>✓ 작가:</span> {reg.author}</div>
-                      <div><span style={{ color: '#80FD8F' }}>✓ 출판사:</span> {reg.publisher}</div>
-                      <div><span style={{ color: '#80FD8F' }}>✓ 링크:</span> <a href={reg.link} target="_blank" rel="noopener noreferrer" className="text-point underline">{reg.link}</a></div>
-                      <div><span style={{ color: '#80FD8F' }}>✓ 마감일:</span> {formatDeadline(reg.deadline)}</div>
-                      <div className="flex items-center gap-2">
-                        <span style={{ color: '#80FD8F' }}>✓ 장르:</span> 
-                        <input
-                          type="text"
-                          value={additionalData[reg.id]?.genre || ''}
-                          onChange={(e) => handleAdditionalDataChange(reg.id, 'genre', e.target.value)}
-                          className="bg-transparent border-b border-gray-600 text-sm px-1 py-0.5 focus:outline-none focus:border-point"
-                        />
-                      </div>
-                      <div><span style={{ color: '#80FD8F' }}>✓ 작가 성별:</span> {reg.author_gender || '-'}</div>
-                      <div><span style={{ color: '#80FD8F' }}>✓ 카테고리:</span> {reg.category || '-'}</div>
-                      <div className="flex items-center gap-2">
-                        <span style={{ color: '#80FD8F' }}>✓ 국적:</span>
-                        <input
-                          type="text"
-                          value={additionalData[reg.id]?.nationality || ''}
-                          onChange={(e) => handleAdditionalDataChange(reg.id, 'nationality', e.target.value)}
-                          className="bg-transparent border-b border-gray-600 text-sm px-1 py-0.5 focus:outline-none focus:border-point"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span style={{ color: '#80FD8F' }}>✓ 타입:</span>
-                        <input
-                          type="text"
-                          value={additionalData[reg.id]?.type || ''}
-                          onChange={(e) => handleAdditionalDataChange(reg.id, 'type', e.target.value)}
-                          className="bg-transparent border-b border-gray-600 text-sm px-1 py-0.5 focus:outline-none focus:border-point"
-                        />
-                      </div>
-                      <div><span className="text-gray-400">이메일:</span> {reg.email}</div>
-                      <div><span className="text-gray-400">설명:</span> {reg.description}</div>
-                      <div><span className="text-gray-400">등록일:</span> {formatDate(reg.created_at)}</div>
+                      {reg.existing_review_id ? (
+                        // 기존 서평단 업데이트인 경우 - 필수 정보만 표시
+                        <>
+                          <div><span className="text-gray-400">이메일:</span> {reg.email}</div>
+                          <div><span className="text-gray-400">한 줄 소개:</span> {reg.description}</div>
+                          <div><span className="text-gray-400">등록일:</span> {formatDate(reg.created_at)}</div>
+                        </>
+                      ) : (
+                        // 새 책 등록인 경우 - 모든 정보 표시
+                        <>
+                          <div><span style={{ color: '#80FD8F' }}>✓ 제목:</span> {reg.title}</div>
+                          <div><span style={{ color: '#80FD8F' }}>✓ 작가:</span> {reg.author}</div>
+                          <div><span style={{ color: '#80FD8F' }}>✓ 출판사:</span> {reg.publisher}</div>
+                          <div><span style={{ color: '#80FD8F' }}>✓ 링크:</span> <a href={reg.link} target="_blank" rel="noopener noreferrer" className="text-point underline break-all">{reg.link}</a></div>
+                          <div><span style={{ color: '#80FD8F' }}>✓ 마감일:</span> {formatDeadline(reg.deadline)}</div>
+                          <div className="flex items-center gap-2">
+                            <span style={{ color: '#80FD8F' }}>✓ 장르:</span> 
+                            <input
+                              type="text"
+                              value={additionalData[reg.id]?.genre || ''}
+                              onChange={(e) => handleAdditionalDataChange(reg.id, 'genre', e.target.value)}
+                              className="bg-transparent border-b border-gray-600 text-sm px-1 py-0.5 focus:outline-none focus:border-point"
+                            />
+                          </div>
+                          <div><span style={{ color: '#80FD8F' }}>✓ 작가 성별:</span> {reg.author_gender || '-'}</div>
+                          <div><span style={{ color: '#80FD8F' }}>✓ 카테고리:</span> {reg.category || '-'}</div>
+                          <div className="flex items-center gap-2">
+                            <span style={{ color: '#80FD8F' }}>✓ 국적:</span>
+                            <input
+                              type="text"
+                              value={additionalData[reg.id]?.nationality || ''}
+                              onChange={(e) => handleAdditionalDataChange(reg.id, 'nationality', e.target.value)}
+                              className="bg-transparent border-b border-gray-600 text-sm px-1 py-0.5 focus:outline-none focus:border-point"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span style={{ color: '#80FD8F' }}>✓ 타입:</span>
+                            <input
+                              type="text"
+                              value={additionalData[reg.id]?.type || ''}
+                              onChange={(e) => handleAdditionalDataChange(reg.id, 'type', e.target.value)}
+                              className="bg-transparent border-b border-gray-600 text-sm px-1 py-0.5 focus:outline-none focus:border-point"
+                            />
+                          </div>
+                          <div><span className="text-gray-400">이메일:</span> {reg.email}</div>
+                          <div><span className="text-gray-400">설명:</span> {reg.description}</div>
+                          <div><span className="text-gray-400">등록일:</span> {formatDate(reg.created_at)}</div>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}

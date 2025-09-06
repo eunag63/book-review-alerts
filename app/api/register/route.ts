@@ -4,7 +4,10 @@ import { supabase } from '../../../lib/supabaseClient';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, author, publisher, link, deadline, genre, authorGender, email, description } = body;
+    const { 
+      title, author, publisher, link, deadline, genre, authorGender, email, description,
+      existingReviewId, isExistingBook
+    } = body;
 
     // 필수 필드 검증
     if (!title || !author || !publisher || !link || !deadline || !email || !description) {
@@ -53,23 +56,28 @@ export async function POST(request: NextRequest) {
     const convertedGender = authorGender ? genderMap[authorGender] || authorGender : null;
 
     // Supabase에 데이터 저장
+    const insertData: any = {
+      title,
+      author,
+      publisher,
+      link,
+      deadline,
+      category: genre,
+      author_gender: convertedGender,
+      email,
+      description,
+      status: 'pending', // 기본 상태: 검토 대기
+      created_at: new Date().toISOString()
+    };
+
+    // 기존 책인 경우 참조 ID 추가
+    if (isExistingBook && existingReviewId) {
+      insertData.existing_review_id = existingReviewId;
+    }
+
     const { data, error } = await supabase
       .from('review_registrations')
-      .insert([
-        {
-          title,
-          author,
-          publisher,
-          link,
-          deadline,
-          category: genre,
-          author_gender: convertedGender,
-          email,
-          description,
-          status: 'pending', // 기본 상태: 검토 대기
-          created_at: new Date().toISOString()
-        }
-      ])
+      .insert([insertData])
       .select();
 
     if (error) {

@@ -61,32 +61,52 @@ export async function PUT(request: NextRequest) {
         );
       }
 
-      // 2. reviews 테이블에 데이터 복사
-      const { error: insertError } = await supabase
-        .from('reviews')
-        .insert([
-          {
-            title: registration.title,
-            author: registration.author,
-            publisher: registration.publisher,
-            deadline: registration.deadline,
-            url: registration.link,
-            genre: additionalData?.genre || '',
-            author_gender: registration.author_gender || '',
-            nationality: additionalData?.nationality || '',
-            type: additionalData?.type || '',
-            category: registration.category,
+      // 2. reviews 테이블 처리
+      if (registration.existing_review_id) {
+        // 기존 서평단 업데이트: source와 registration_id만 업데이트
+        const { error: updateError } = await supabase
+          .from('reviews')
+          .update({
             source: 'registration',
             registration_id: registration.id
-          }
-        ]);
+          })
+          .eq('id', registration.existing_review_id);
 
-      if (insertError) {
-        console.error('reviews 복사 오류:', insertError);
-        return NextResponse.json(
-          { error: '승인 처리 중 오류가 발생했습니다.' },
-          { status: 500 }
-        );
+        if (updateError) {
+          console.error('기존 reviews 업데이트 오류:', updateError);
+          return NextResponse.json(
+            { error: '기존 서평단 업데이트 중 오류가 발생했습니다.' },
+            { status: 500 }
+          );
+        }
+      } else {
+        // 새 책 등록: 새 레코드 생성
+        const { error: insertError } = await supabase
+          .from('reviews')
+          .insert([
+            {
+              title: registration.title,
+              author: registration.author,
+              publisher: registration.publisher,
+              deadline: registration.deadline,
+              url: registration.link,
+              genre: additionalData?.genre || '',
+              author_gender: registration.author_gender || '',
+              nationality: additionalData?.nationality || '',
+              type: additionalData?.type || '',
+              category: registration.category,
+              source: 'registration',
+              registration_id: registration.id
+            }
+          ]);
+
+        if (insertError) {
+          console.error('새 reviews 생성 오류:', insertError);
+          return NextResponse.json(
+            { error: '새 서평단 등록 중 오류가 발생했습니다.' },
+            { status: 500 }
+          );
+        }
       }
 
       // 3. 상태를 approved로 변경
