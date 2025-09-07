@@ -23,6 +23,8 @@ export async function GET() {
     return NextResponse.json({ success: true, result });
   } catch (error) {
     console.error('오류:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.' 
+    }, { status: 500 });
   }
 }
