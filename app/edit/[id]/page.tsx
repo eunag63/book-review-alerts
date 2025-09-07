@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { calcDDay, isCreatedToday } from '../../../lib/reviewUtils'
+import { calcDDay } from '../../../lib/reviewUtils'
 
 interface RegistrationData {
   id: number;
@@ -146,15 +146,6 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
       
       {/* 홈화면과 동일한 카드 디자인 */}
       <div className="mb-6 p-4 border rounded relative">
-        {/* NEW 배지 (생성된 날짜 기준) */}
-        {isCreatedToday({ created_at: new Date().toISOString() } as { created_at: string }) && (
-          <span 
-            className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
-            style={{ backgroundColor: '#80FD8F', fontSize: '10px' }}
-          >
-            NEW
-          </span>
-        )}
         <p className="font-medium pr-12">{data.title}</p>
         <p className="text-sm text-gray-600 mb-1">
           {[data.publisher, data.author, data.genre].filter(Boolean).join(' | ')}
