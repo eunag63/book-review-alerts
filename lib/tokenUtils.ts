@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash } from 'crypto';
 
 // 등록 데이터별 고유 토큰 생성
 export function generateEditToken(registrationId: number, email: string): string {

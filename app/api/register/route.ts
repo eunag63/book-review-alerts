@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const convertedGender = authorGender ? genderMap[authorGender] || authorGender : null;
 
     // Supabase에 데이터 저장
-    const insertData: any = {
+    const insertData: Record<string, unknown> = {
       title,
       author,
       publisher,

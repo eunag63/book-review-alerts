@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import DescriptionBubble from '../../components/DescriptionBubble'
 import { calcDDay, isCreatedToday } from '../../../lib/reviewUtils'
 
 interface RegistrationData {
@@ -67,7 +66,7 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
           deadline: result.registration.deadline || '',
           link: result.registration.link || result.registration.url || ''
         })
-      } catch (err) {
+      } catch {
         setError('서버 오류가 발생했습니다.')
       } finally {
         setLoading(false)
@@ -109,7 +108,7 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
       } else {
         setError(result.error || '수정 중 오류가 발생했습니다.')
       }
-    } catch (err) {
+    } catch {
       setError('서버 오류가 발생했습니다.')
     } finally {
       setSubmitting(false)
@@ -148,7 +147,7 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
       {/* 홈화면과 동일한 카드 디자인 */}
       <div className="mb-6 p-4 border rounded relative">
         {/* NEW 배지 (생성된 날짜 기준) */}
-        {isCreatedToday({ created_at: new Date().toISOString() } as any) && (
+        {isCreatedToday({ created_at: new Date().toISOString() } as { created_at: string }) && (
           <span 
             className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
             style={{ backgroundColor: '#80FD8F', fontSize: '10px' }}
