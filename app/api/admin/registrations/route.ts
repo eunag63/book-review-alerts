@@ -156,7 +156,9 @@ export async function PUT(request: NextRequest) {
       
       const { subject, htmlContent } = getEmailTemplate({
         title: registration.title,
-        isApproved: action === 'approve'
+        isApproved: action === 'approve',
+        registrationId: registration.id,
+        email: registration.email
       });
 
       const result = await resend.emails.send({

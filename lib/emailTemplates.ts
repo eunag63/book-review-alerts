@@ -1,9 +1,13 @@
 interface EmailTemplateProps {
   title: string;
   isApproved: boolean;
+  registrationId?: number;
+  email?: string;
 }
 
-export function getEmailTemplate({ title, isApproved }: EmailTemplateProps) {
+import { generateEditToken } from './tokenUtils';
+
+export function getEmailTemplate({ title, isApproved, registrationId, email }: EmailTemplateProps) {
   const subject = isApproved 
     ? `『${title}』 서평단 등록이 승인되었습니다`
     : `『${title}』 서평단 등록이 거부되었습니다`;
@@ -34,7 +38,7 @@ export function getEmailTemplate({ title, isApproved }: EmailTemplateProps) {
           
           <!-- CTA Button -->
           <div style="text-align: center; margin-bottom: 20px;">
-            <a href="https://freebook.kr/register" 
+            <a href="${registrationId && email ? `https://freebook.kr/edit/${registrationId}?token=${generateEditToken(registrationId, email)}` : 'https://freebook.kr/register'}" 
                style="display: inline-block; background-color: #80FD8F; color: #000000; padding: 8px 16px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
               서평단 정보 수정하기
             </a>
