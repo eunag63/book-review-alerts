@@ -7,6 +7,7 @@ import { getReviewsByPeriod, getAvailablePeriods, calcDDay, isCreatedToday, isDe
 import { assignBadgesToReviews } from '../lib/clickAnalytics'
 // import BannerAd from './components/BannerAd'
 import SearchReviews from './components/SearchReviews'
+import DescriptionBubble from './components/DescriptionBubble'
 
 export default function HomePage() {
   const [availablePeriods, setAvailablePeriods] = useState<string[]>([])
@@ -140,6 +141,10 @@ export default function HomePage() {
                           </span>
                         )}
                       </div>
+
+                      {r.source === 'registration' && r.registration_id ? (
+                        <DescriptionBubble registrationId={r.registration_id} />
+                      ) : null}
                     </li>
                   ))}
                 </ul>

@@ -7,6 +7,7 @@ import type { ReviewWithBadge } from '../../lib/clickAnalytics'
 import { isCreatedToday, isDeadlineValid } from '../../lib/reviewUtils'
 import { assignBadgesToReviews } from '../../lib/clickAnalytics'
 import KeywordFilter from './KeywordFilter'
+import DescriptionBubble from './DescriptionBubble'
 
 export default function SearchReviews() {
   const [query, setQuery] = useState('')
@@ -170,6 +171,10 @@ export default function SearchReviews() {
                     </span>
                   )}
                 </div>
+
+                {r.source === 'registration' && r.registration_id ? (
+                  <DescriptionBubble registrationId={r.registration_id} />
+                ) : null}
               </li>
             ))}
           </ul>

@@ -73,7 +73,7 @@ export async function getReviewsByPeriod(period: string) {
     periodText = '다음주 마감되는'
   }
 
-  const { data, error } = await query.order('deadline', { ascending: true })
+  const { data, error } = await query.select('*').order('deadline', { ascending: true })
   if (error) {
     return { reviews: [], periodText, error }
   }
