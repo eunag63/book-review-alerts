@@ -290,17 +290,6 @@ export default function RegisterPage() {
               <div className="space-y-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    // TODO: 서평단 정보 수정 페이지로 이동하는 로직 추가 예정
-                    alert('서평단 정보 수정 기능은 곧 추가될 예정입니다.');
-                  }}
-                  className="flex items-center text-xs text-[#80FD8F] hover:text-green-200"
-                >
-                  <span className="mr-1">▷</span>
-                  <span className="underline">서평단 정보 수정하기</span>
-                </button>
-                <button
-                  type="button"
                   onClick={registerAsNewBook}
                   className="flex items-center text-xs text-[#80FD8F] hover:text-green-200"
                 >
