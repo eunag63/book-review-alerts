@@ -4,8 +4,8 @@ import { Analytics } from "@vercel/analytics/next";
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-black">
-        <header className="bg-black pl-10 pr-6 py-5">
+      <body className="min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
+        <header style={{ backgroundColor: '#0a0a0a' }} className="pl-10 pr-6 py-5">
           <h1 className="text-white text-2xl font-bold tracking-tight m-0" style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '-0.5px' }}>
             <span className="text-[#80FD8F]">freebook</span> 책 서평단 모음
           </h1>
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             서평단 등록하기
           </a>
         </div>
-        <main className="max-w-md mx-auto p-6">{children}</main>
+        <main className="max-w-md mx-auto p-6 text-white min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>{children}</main>
         <footer className="text-center p-4 text-gray-500 text-sm">
           <p>COPYRIGHT © freebook. All rights reserved.</p>
         </footer>

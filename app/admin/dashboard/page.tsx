@@ -152,14 +152,14 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen p-6 max-w-4xl mx-auto">
+      <div className="min-h-screen">
         <p className="text-center text-gray-500">로딩 중...</p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen p-6 max-w-md mx-auto">
+    <div className="min-h-screen">
       <section className="mb-8">
         <Link 
           href="/" 
@@ -401,6 +401,6 @@ export default function AdminPage() {
           </div>
         )}
       </section>
-    </main>
+    </div>
   );
 }

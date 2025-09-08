@@ -172,7 +172,7 @@ export default function RegisterPage() {
 
   if (isSubmitted) {
     return (
-      <main className="min-h-screen p-6 max-w-md mx-auto flex flex-col justify-center">
+      <div className="min-h-screen flex flex-col justify-center">
         <div className="text-center">
           <div className="mb-8">
             <div className="w-16 h-16 bg-[#80FD8F] rounded-full flex items-center justify-center mx-auto mb-6">
@@ -192,12 +192,12 @@ export default function RegisterPage() {
             홈으로 돌아가기
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen p-6 max-w-md mx-auto">
+    <div className="min-h-screen">
       <div className="mb-8">
         <Link 
           href="/" 
@@ -498,6 +498,6 @@ export default function RegisterPage() {
           </button>
         </div>
       </form>
-    </main>
+    </div>
   );
 }

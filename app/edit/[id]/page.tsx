@@ -117,15 +117,15 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
 
   if (loading) {
     return (
-      <main className="min-h-screen p-6 max-w-md mx-auto">
+      <div className="min-h-screen">
         <p className="text-center text-gray-500">로딩 중...</p>
-      </main>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <main className="min-h-screen p-6 max-w-md mx-auto">
+      <div className="min-h-screen">
         <h1 className="text-xl font-semibold mb-4">오류</h1>
         <p className="text-red-500">{error}</p>
         <button 
@@ -134,14 +134,14 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
         >
           홈으로 돌아가기
         </button>
-      </main>
+      </div>
     )
   }
 
   if (!data) return null
 
   return (
-    <main className="min-h-screen p-6 max-w-md mx-auto">
+    <div className="min-h-screen">
       <h1 className="text-xl font-semibold mb-6">서평단 정보 수정</h1>
       
       {/* 홈화면과 동일한 카드 디자인 */}
@@ -251,6 +251,6 @@ export default function EditRegistrationPage({ params }: { params: Promise<{ id:
           </p>
         </div>
       </form>
-    </main>
+    </div>
   )
 }

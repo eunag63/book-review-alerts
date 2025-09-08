@@ -61,14 +61,14 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen p-6 max-w-md mx-auto">
+      <div className="min-h-screen">
         <p className="text-center text-gray-500">로딩 중...</p>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="min-h-screen p-6 max-w-md mx-auto">
+    <div className="min-h-screen">
       <section className="mb-8">
         {availablePeriods.length === 0 ? (
           <>
@@ -168,6 +168,6 @@ export default function HomePage() {
 
       {/* <BannerAd /> */}
       <SearchReviews />
-    </main>
+    </div>
   )
 }
