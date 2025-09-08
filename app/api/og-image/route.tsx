@@ -8,9 +8,10 @@ export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+import { getReviewCountsByPeriod } from '../../../lib/reviewUtils'
+
 export async function GET(request: NextRequest) {
   try {
-    const { getReviewCountsByPeriod } = await import('../../lib/reviewUtils')
     const counts = await getReviewCountsByPeriod()
     
     const todayCount = counts.today
