@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { calcDDay } from '../../../lib/reviewUtils';
+import { generateSalesToken } from '../../../lib/tokenUtils';
 
 interface RegistrationData {
   id: number;
@@ -20,14 +21,29 @@ interface RegistrationData {
   existing_review_id?: number;
 }
 
+interface ReviewData {
+  id: number;
+  title: string;
+  author: string;
+  publisher: string;
+  url: string;
+  deadline: string;
+  source: string;
+  created_at: string;
+}
+
 export default function AdminPage() {
   const [registrations, setRegistrations] = useState<RegistrationData[]>([]);
+  const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const [error, setError] = useState('');
   const [additionalData, setAdditionalData] = useState<{[key: number]: {genre?: string, nationality?: string, type?: string}}>({});
+  const [activeTab, setActiveTab] = useState<'registrations' | 'reviews'>('registrations');
 
   useEffect(() => {
     fetchPendingRegistrations();
+    fetchReviews();
   }, []);
 
   const fetchPendingRegistrations = async () => {
@@ -45,6 +61,39 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      console.log('Reviews 데이터 요청 시작...');
+      const response = await fetch('/api/admin/reviews');
+      console.log('Reviews API 응답 상태:', response.status);
+      
+      const data = await response.json();
+      console.log('Reviews 데이터:', data);
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Reviews 데이터 로딩 실패');
+      }
+      
+      setReviews(data.reviews);
+    } catch (err) {
+      console.error('Reviews 로딩 오류:', err);
+      setError(`Reviews 로딩 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const generateSalesLink = (reviewId: number) => {
+    const token = generateSalesToken(reviewId);
+    const link = `${window.location.origin}/add-info/${reviewId}?token=${token}`;
+    
+    navigator.clipboard.writeText(link).then(() => {
+      alert('영업용 링크가 클립보드에 복사되었습니다!');
+    }).catch(() => {
+      prompt('영업용 링크를 복사하세요:', link);
+    });
   };
 
   const handleAdditionalDataChange = (id: number, field: string, value: string) => {
@@ -121,11 +170,37 @@ export default function AdminPage() {
           </svg>
           홈으로 돌아가기
         </Link>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xl font-semibold">
-            대기 중인 등록 <span style={{ color: '#80FD8F' }}>{registrations.length}개</span>
-          </h2>
+        {/* 탭 네비게이션 */}
+        <div className="flex mb-6 border-b border-gray-700">
+          <button
+            onClick={() => setActiveTab('registrations')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'registrations'
+                ? 'text-point border-b-2 border-point'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            등록 승인 ({registrations.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'reviews'
+                ? 'text-point border-b-2 border-point'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            영업용 링크 ({reviews.length})
+          </button>
         </div>
+
+        {activeTab === 'registrations' && (
+          <>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold">
+                대기 중인 등록 <span style={{ color: '#80FD8F' }}>{registrations.length}개</span>
+              </h2>
+            </div>
 
         {error && (
           <div className="bg-red-900/20 border border-red-500 rounded p-3 mb-4">
@@ -269,8 +344,61 @@ export default function AdminPage() {
               </div>
             </div>
           </>
-        ) : (
-          <p className="text-gray-500 text-center py-8">대기 중인 등록이 없습니다.</p>
+          ) : (
+            <p className="text-gray-500 text-center py-8">대기 중인 등록이 없습니다.</p>
+          )}
+          </>
+        )}
+
+        {activeTab === 'reviews' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">
+                영업용 링크 생성 <span style={{ color: '#80FD8F' }}>{reviews.length}개</span>
+              </h2>
+            </div>
+
+            {error && (
+              <div className="bg-red-900/20 border border-red-500 rounded p-3 mb-4">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+
+            {reviewsLoading ? (
+              <p className="text-center text-gray-500 py-8">로딩 중...</p>
+            ) : reviews.length > 0 ? (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <div key={review.id} className="p-4 border border-gray-700 rounded">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-lg">{review.title}</h3>
+                        <p className="text-sm text-gray-400">
+                          {[review.publisher, review.author].filter(Boolean).join(' | ')}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          마감: {formatDeadline(review.deadline)} | 
+                          등록일: {formatDate(review.created_at)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => generateSalesLink(review.id)}
+                        className="ml-4 px-3 py-1 text-xs font-medium rounded transition-colors"
+                        style={{ backgroundColor: '#80FD8F', color: 'black' }}
+                      >
+                        링크 복사
+                      </button>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      출처: {review.source === 'registration' ? '등록 신청' : '직접 등록'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">등록된 서평단이 없습니다.</p>
+            )}
+          </div>
         )}
       </section>
     </main>

@@ -12,3 +12,16 @@ export function verifyEditToken(token: string, registrationId: number, email: st
   const expectedToken = generateEditToken(registrationId, email);
   return token === expectedToken;
 }
+
+// 영업용 토큰 생성 (reviews ID 기반)
+export function generateSalesToken(reviewId: number): string {
+  const salt = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'default-salt';
+  const data = `sales-${reviewId}-${salt}`;
+  return createHash('sha256').update(data).digest('hex').substring(0, 32);
+}
+
+// 영업용 토큰 검증
+export function verifySalesToken(token: string, reviewId: number): boolean {
+  const expectedToken = generateSalesToken(reviewId);
+  return token === expectedToken;
+}
