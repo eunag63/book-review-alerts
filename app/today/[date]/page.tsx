@@ -1,5 +1,8 @@
+'use client'
+
 import { Metadata } from 'next'
 import { getReviewCountsByPeriod } from '../../../lib/reviewUtils'
+
 export async function generateMetadata({ params }: { params: Promise<{ date: string }> }): Promise<Metadata> {
   const { date } = await params
   const counts = await getReviewCountsByPeriod()
@@ -37,8 +40,6 @@ export async function generateMetadata({ params }: { params: Promise<{ date: str
     },
   }
 }
-
-'use client'
 
 export default function TodayPage() {
   // 클라이언트에서 즉시 메인으로 리다이렉트
