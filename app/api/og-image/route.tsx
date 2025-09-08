@@ -10,14 +10,12 @@ export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const today = searchParams.get('today') || '0'
-    const thisWeek = searchParams.get('thisWeek') || '0'
-    const nextWeek = searchParams.get('nextWeek') || '0'
-
-    const todayCount = parseInt(today, 10)
-    const thisWeekCount = parseInt(thisWeek, 10)
-    const nextWeekCount = parseInt(nextWeek, 10)
+    const { getReviewCountsByPeriod } = await import('../../lib/reviewUtils')
+    const counts = await getReviewCountsByPeriod()
+    
+    const todayCount = counts.today
+    const thisWeekCount = counts.thisWeek  
+    const nextWeekCount = counts.nextWeek
 
     // 메시지 결정
     let mainText = '새로운 서평단 모집'

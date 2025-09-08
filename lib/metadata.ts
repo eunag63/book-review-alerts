@@ -10,7 +10,7 @@ export async function generateDynamicMetadata(): Promise<Metadata> {
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com'
   const now = Date.now()
-  const ogImageUrl = `${baseUrl}/api/og-image?today=${counts.today}&thisWeek=${counts.thisWeek}&nextWeek=${counts.nextWeek}&v=${now}`
+  const ogImageUrl = `${baseUrl}/api/og-image?v=${now}`
   
   return {
     title,
