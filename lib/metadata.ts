@@ -9,8 +9,7 @@ export async function generateDynamicMetadata(): Promise<Metadata> {
   const description = "새로운 서평단 모집 정보를 확인하세요!"
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://your-domain.com'
-  const now = Date.now()
-  const ogImageUrl = `${baseUrl}/api/og-image?v=${now}`
+  const ogImageUrl = `${baseUrl}/api/og-image`
   
   return {
     title,
@@ -18,7 +17,7 @@ export async function generateDynamicMetadata(): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: `${baseUrl}?v=${now}`,
+      url: baseUrl,
       siteName: '책 서평단 알림',
       images: [
         {
