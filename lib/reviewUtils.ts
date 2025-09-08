@@ -8,7 +8,7 @@ export function getKoreanDate(): Date {
 }
 
 export function getDateString(date: Date): string {
-  return date.toLocaleDateString('en-CA')
+  return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' })
 }
 
 export function getWeekRange(date: Date): { start: string; end: string } {

@@ -12,11 +12,15 @@ import { getReviewCountsByPeriod } from '../../../lib/reviewUtils'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('=== OG Image API 호출 ===')
     const counts = await getReviewCountsByPeriod()
+    console.log('DB에서 가져온 개수:', counts)
     
     const todayCount = counts.today
     const thisWeekCount = counts.thisWeek  
     const nextWeekCount = counts.nextWeek
+    
+    console.log('사용할 개수:', { todayCount, thisWeekCount, nextWeekCount })
 
     // 메시지 결정
     let mainText = '새로운 서평단 모집'
