@@ -10,7 +10,7 @@ export const revalidate = 0
 
 import { getReviewCountsByPeriod } from '../../../lib/reviewUtils'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('=== OG Image API 호출 ===')
     const counts = await getReviewCountsByPeriod()

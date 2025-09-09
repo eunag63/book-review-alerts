@@ -3,7 +3,6 @@ import { Metadata } from 'next'
 import { getReviewCountsByPeriod } from './reviewUtils'
 
 export async function generateDynamicMetadata(): Promise<Metadata> {
-  const counts = await getReviewCountsByPeriod()
   
   const title = "프리북 - 책 서평단 모음"
   const description = "새로운 서평단 모집 정보를 확인하세요!"
