@@ -1,6 +1,5 @@
 // app/api/og-image/route.tsx
 import { ImageResponse } from 'next/og'
-import { NextRequest } from 'next/server'
 
 export const runtime = 'edge'
 

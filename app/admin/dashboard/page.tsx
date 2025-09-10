@@ -43,22 +43,34 @@ interface AnalyticsData {
   click_count: number;
 }
 
+interface PublisherDashboard {
+  id: number;
+  review_id: number;
+  token: string;
+  created_at: string;
+  review_title: string;
+  review_author: string;
+  review_publisher: string;
+}
+
 export default function AdminPage() {
   const [registrations, setRegistrations] = useState<RegistrationData[]>([]);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
+  const [publisherDashboards, setPublisherDashboards] = useState<PublisherDashboard[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [error, setError] = useState('');
   const [additionalData, setAdditionalData] = useState<{[key: number]: {genre?: string, nationality?: string, type?: string}}>({});
-  const [activeTab, setActiveTab] = useState<'registrations' | 'reviews' | 'analytics'>('registrations');
+  const [activeTab, setActiveTab] = useState<'registrations' | 'reviews' | 'analytics' | 'publishers'>('registrations');
   const [sortBy, setSortBy] = useState<'date' | 'clicks'>('date');
 
   useEffect(() => {
     fetchPendingRegistrations();
     fetchReviews();
     fetchAnalytics();
+    fetchPublisherDashboards();
   }, []);
 
   const fetchPendingRegistrations = async () => {
@@ -118,6 +130,24 @@ export default function AdminPage() {
     }
   };
 
+  const fetchPublisherDashboards = async () => {
+    try {
+      const response = await fetch('/api/admin/publisher-dashboards');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || '출판사 대시보드 로딩 실패');
+      }
+      
+      setPublisherDashboards(data.dashboards);
+    } catch (err) {
+      console.error('Publisher dashboards 로딩 오류:', err);
+      setError(`출판사 대시보드 로딩 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+    } finally {
+      // Loading state handled by reviewsLoading
+    }
+  };
+
   const generateSalesLink = (reviewId: number) => {
     const token = generateSalesToken(reviewId);
     const link = `${window.location.origin}/add-info/${reviewId}?token=${token}`;
@@ -126,6 +156,39 @@ export default function AdminPage() {
       alert('영업용 링크가 클립보드에 복사되었습니다!');
     }).catch(() => {
       prompt('영업용 링크를 복사하세요:', link);
+    });
+  };
+
+  const createPublisherDashboard = async (reviewId: number) => {
+    try {
+      const response = await fetch('/api/admin/publisher-dashboards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reviewId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '출판사 대시보드 생성 실패');
+      }
+
+      alert('출판사 대시보드가 생성되었습니다!');
+      fetchPublisherDashboards(); // 목록 새로고침
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '출판사 대시보드 생성 실패');
+    }
+  };
+
+  const copyPublisherLink = (token: string) => {
+    const link = `${window.location.origin}/publisher/${token}`;
+    
+    navigator.clipboard.writeText(link).then(() => {
+      alert('출판사 대시보드 링크가 클립보드에 복사되었습니다!');
+    }).catch(() => {
+      prompt('출판사 대시보드 링크를 복사하세요:', link);
     });
   };
 
@@ -223,7 +286,7 @@ export default function AdminPage() {
                 : 'text-gray-400 hover:text-white'
             }`}
           >
-            영업용 링크 ({reviews.length})
+            서평단 관리 ({reviews.length})
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
@@ -397,7 +460,7 @@ export default function AdminPage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">
-                영업용 링크 생성 <span style={{ color: '#80FD8F' }}>{reviews.length}개</span>
+                서평단 관리 <span style={{ color: '#80FD8F' }}>{reviews.length}개</span>
               </h2>
             </div>
 
@@ -411,32 +474,59 @@ export default function AdminPage() {
               <p className="text-center text-gray-500 py-8">로딩 중...</p>
             ) : reviews.length > 0 ? (
               <div className="space-y-4">
-                {reviews.map((review) => (
-                  <div key={review.id} className="p-4 border border-gray-700 rounded">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-lg">{review.title}</h3>
-                        <p className="text-sm text-gray-400">
-                          {[review.publisher, review.author].filter(Boolean).join(' | ')}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          마감: {formatDeadline(review.deadline)} | 
-                          등록일: {formatDate(review.created_at)}
-                        </p>
+                {reviews.map((review) => {
+                  const existingDashboard = publisherDashboards.find(dashboard => dashboard.review_id === review.id);
+                  
+                  return (
+                    <div key={review.id} className="p-4 border border-gray-700 rounded">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-lg">{review.title}</h3>
+                          <p className="text-sm text-gray-400">
+                            {[review.publisher, review.author].filter(Boolean).join(' | ')}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            마감: {formatDeadline(review.deadline)} | 
+                            등록일: {formatDate(review.created_at)}
+                          </p>
+                          {existingDashboard && (
+                            <p className="text-sm text-green-400 mt-1">
+                              출판사 대시보드 생성됨: {formatDate(existingDashboard.created_at)}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => generateSalesLink(review.id)}
+                            className="px-3 py-1 text-xs font-medium rounded transition-colors"
+                            style={{ backgroundColor: '#80FD8F', color: 'black' }}
+                          >
+                            영업 링크
+                          </button>
+                          {existingDashboard ? (
+                            <button
+                              onClick={() => copyPublisherLink(existingDashboard.token)}
+                              className="px-3 py-1 text-xs font-medium rounded transition-colors"
+                              style={{ backgroundColor: '#80FD8F', color: 'black' }}
+                            >
+                              출판사 링크
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => createPublisherDashboard(review.id)}
+                              className="px-3 py-1 text-xs font-medium rounded transition-colors bg-gray-600 text-white hover:bg-gray-700"
+                            >
+                              출판사 생성
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <button
-                        onClick={() => generateSalesLink(review.id)}
-                        className="ml-4 px-3 py-1 text-xs font-medium rounded transition-colors"
-                        style={{ backgroundColor: '#80FD8F', color: 'black' }}
-                      >
-                        링크 복사
-                      </button>
+                      <div className="text-xs text-gray-500">
+                        출처: {review.source === 'registration' ? '등록 신청' : '직접 등록'}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      출처: {review.source === 'registration' ? '등록 신청' : '직접 등록'}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-gray-500 text-center py-8">등록된 서평단이 없습니다.</p>
@@ -517,6 +607,7 @@ export default function AdminPage() {
             )}
           </div>
         )}
+
       </section>
     </div>
   );
