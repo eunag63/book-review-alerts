@@ -32,18 +32,33 @@ interface ReviewData {
   created_at: string;
 }
 
+interface AnalyticsData {
+  id: number;
+  title: string;
+  author: string;
+  publisher: string;
+  deadline: string;
+  source: string;
+  created_at: string;
+  click_count: number;
+}
+
 export default function AdminPage() {
   const [registrations, setRegistrations] = useState<RegistrationData[]>([]);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [error, setError] = useState('');
   const [additionalData, setAdditionalData] = useState<{[key: number]: {genre?: string, nationality?: string, type?: string}}>({});
-  const [activeTab, setActiveTab] = useState<'registrations' | 'reviews'>('registrations');
+  const [activeTab, setActiveTab] = useState<'registrations' | 'reviews' | 'analytics'>('registrations');
+  const [sortBy, setSortBy] = useState<'date' | 'clicks'>('date');
 
   useEffect(() => {
     fetchPendingRegistrations();
     fetchReviews();
+    fetchAnalytics();
   }, []);
 
   const fetchPendingRegistrations = async () => {
@@ -82,6 +97,24 @@ export default function AdminPage() {
       setError(`Reviews 로딩 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
     } finally {
       setReviewsLoading(false);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch('/api/admin/analytics');
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || '분석 데이터 로딩 실패');
+      }
+      
+      setAnalytics(data.analytics);
+    } catch (err) {
+      console.error('Analytics 로딩 오류:', err);
+      setError(`분석 데이터 로딩 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`);
+    } finally {
+      setAnalyticsLoading(false);
     }
   };
 
@@ -191,6 +224,16 @@ export default function AdminPage() {
             }`}
           >
             영업용 링크 ({reviews.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'analytics'
+                ? 'text-point border-b-2 border-point'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            클릭 분석 ({analytics.length})
           </button>
         </div>
 
@@ -397,6 +440,80 @@ export default function AdminPage() {
               </div>
             ) : (
               <p className="text-gray-500 text-center py-8">등록된 서평단이 없습니다.</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">
+                클릭 분석 <span style={{ color: '#80FD8F' }}>{analytics.length}개</span>
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSortBy('date')}
+                  className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                    sortBy === 'date'
+                      ? 'bg-[#80FD8F] text-black'
+                      : 'bg-gray-600 text-white hover:bg-gray-700'
+                  }`}
+                >
+                  등록순
+                </button>
+                <button
+                  onClick={() => setSortBy('clicks')}
+                  className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                    sortBy === 'clicks'
+                      ? 'bg-[#80FD8F] text-black'
+                      : 'bg-gray-600 text-white hover:bg-gray-700'
+                  }`}
+                >
+                  클릭순
+                </button>
+              </div>
+            </div>
+
+            {analyticsLoading ? (
+              <p className="text-center text-gray-500 py-8">로딩 중...</p>
+            ) : analytics.length > 0 ? (
+              <div className="space-y-4">
+                {analytics
+                  .sort((a, b) => {
+                    if (sortBy === 'clicks') {
+                      return b.click_count - a.click_count; // 클릭수 내림차순
+                    } else {
+                      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime(); // 등록일 내림차순 (최신 먼저)
+                    }
+                  })
+                  .map((item) => (
+                  <div key={item.id} className="p-4 border border-gray-700 rounded">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-lg">{item.title}</h3>
+                        <p className="text-sm text-gray-400">
+                          {[item.publisher, item.author].filter(Boolean).join(' | ')}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          마감: {formatDeadline(item.deadline)} | 
+                          등록일: {formatDate(item.created_at)}
+                        </p>
+                      </div>
+                      <div className="ml-4 text-right">
+                        <div className="text-2xl font-bold" style={{ color: '#80FD8F' }}>
+                          {item.click_count}
+                        </div>
+                        <div className="text-xs text-gray-500">클릭</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      출처: {item.source === 'registration' ? '등록 신청' : '직접 등록'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">분석할 데이터가 없습니다.</p>
             )}
           </div>
         )}
