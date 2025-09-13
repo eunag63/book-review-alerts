@@ -32,9 +32,20 @@ export async function GET(
       );
     }
 
+    // 해당 서평단의 제출 현황 조회
+    const { data: submissions, error: submissionsError } = await supabase
+      .from('review_submissions')
+      .select('*')
+      .eq('review_id', dashboard.review_id)
+      .order('submitted_at', { ascending: false });
+
+    if (submissionsError) {
+      console.error('제출 현황 조회 오류:', submissionsError);
+    }
+
     return NextResponse.json({
       review: dashboard.reviews,
-      participants: []
+      submissions: submissions || []
     });
 
   } catch (error) {

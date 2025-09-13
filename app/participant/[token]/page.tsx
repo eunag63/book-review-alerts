@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 interface ParticipantData {
   id?: number;
-  email: string;
+  contact: string; // 이메일 또는 SNS ID
   gender: string;
   age: number;
   address: string;
@@ -23,7 +23,7 @@ export default function ParticipantPage({ params }: { params: Promise<{ token: s
   const [loading, setLoading] = useState(true)
   const [isNewUser, setIsNewUser] = useState(true)
   const [formData, setFormData] = useState<ParticipantData>({
-    email: '',
+    contact: '',
     gender: '',
     age: 0,
     address: '',
@@ -108,12 +108,13 @@ export default function ParticipantPage({ params }: { params: Promise<{ token: s
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-white mb-2">
-                이메일 <span className="text-red-500">*</span>
+                연락처 (이메일 또는 SNS ID) <span className="text-red-500">*</span>
               </label>
               <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                type="text"
+                placeholder="example@email.com 또는 @sns_id"
+                value={formData.contact}
+                onChange={(e) => setFormData(prev => ({...prev, contact: e.target.value}))}
                 className="w-full p-3 border rounded-md bg-gray-800 border-gray-600 text-white"
                 required
               />
