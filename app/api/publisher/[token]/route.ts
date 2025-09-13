@@ -43,9 +43,21 @@ export async function GET(
       console.error('제출 현황 조회 오류:', submissionsError);
     }
 
+    // 해당 서평단의 당첨자 정보 조회
+    const { data: winners, error: winnersError } = await supabase
+      .from('review_winners')
+      .select('*')
+      .eq('review_id', dashboard.review_id)
+      .order('registered_at', { ascending: false });
+
+    if (winnersError) {
+      console.error('당첨자 정보 조회 오류:', winnersError);
+    }
+
     return NextResponse.json({
       review: dashboard.reviews,
-      submissions: submissions || []
+      submissions: submissions || [],
+      winners: winners || []
     });
 
   } catch (error) {
