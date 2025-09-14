@@ -11,7 +11,7 @@ export async function GET(
 
     const { data: review, error } = await supabase
       .from('reviews')
-      .select('id, title, author, publisher, deadline')
+      .select('id, title, author, publisher, deadline, review_deadline')
       .eq('id', parseInt(id))
       .single();
 

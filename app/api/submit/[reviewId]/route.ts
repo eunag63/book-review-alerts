@@ -28,10 +28,10 @@ export async function POST(
       );
     }
 
-    // 서평단 존재 확인
+    // 서평단 존재 및 마감일 확인
     const { data: review, error: reviewError } = await supabase
       .from('reviews')
-      .select('id')
+      .select('id, review_deadline')
       .eq('id', parseInt(reviewId))
       .single();
 
@@ -39,6 +39,24 @@ export async function POST(
       return NextResponse.json(
         { error: '존재하지 않는 서평단입니다.' },
         { status: 404 }
+      );
+    }
+
+    // 서평 제출 마감일 체크
+    if (!review.review_deadline) {
+      return NextResponse.json(
+        { error: '서평 제출 기간이 아직 설정되지 않았습니다.' },
+        { status: 400 }
+      );
+    }
+
+    const deadline = new Date(review.review_deadline);
+    const now = new Date();
+    
+    if (deadline < now) {
+      return NextResponse.json(
+        { error: '서평 제출 기간이 마감되었습니다.' },
+        { status: 400 }
       );
     }
 

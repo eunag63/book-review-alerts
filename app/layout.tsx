@@ -1,18 +1,13 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import Link from "next/link";
+import Header from "./components/Header";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
       <body className="min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
-        <header style={{ backgroundColor: '#0a0a0a' }} className="pl-10 pr-6 py-5">
-          <Link href="/" className="block">
-            <h1 className="text-white text-2xl font-bold tracking-tight m-0 hover:opacity-80 transition-opacity" style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '-0.5px' }}>
-              <span className="text-[#80FD8F]">freebook</span> 책 서평단 모음
-            </h1>
-          </Link>
-        </header>
+        <Header />
         
         {/* 녹색 구역에 서평단 등록하기 */}
         <div className="bg-[#80FD8F] py-1 flex items-center relative">

@@ -19,7 +19,8 @@ export async function GET(
           title,
           author,
           publisher,
-          deadline
+          deadline,
+          review_deadline
         )
       `)
       .eq('token', token)

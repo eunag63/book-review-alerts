@@ -8,6 +8,7 @@ interface ReviewInfo {
   author: string;
   publisher: string;
   deadline: string;
+  review_deadline?: string;
 }
 
 interface SubmissionData {
@@ -27,6 +28,7 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
     contact: '',
     review_link: ''
   })
+  const [isDeadlineExpired, setIsDeadlineExpired] = useState(false)
 
   useEffect(() => {
     async function initializeSubmission() {
@@ -44,6 +46,13 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
       
       if (response.ok && data.review) {
         setReviewInfo(data.review)
+        
+        // 마감일 체크
+        if (data.review.review_deadline) {
+          const deadline = new Date(data.review.review_deadline)
+          const now = new Date()
+          setIsDeadlineExpired(deadline < now)
+        }
       } else {
         alert('서평단 정보를 찾을 수 없습니다.')
       }
@@ -115,6 +124,50 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
     )
   }
 
+  // 마감일이 설정되지 않았거나 마감일이 지난 경우
+  if (!reviewInfo?.review_deadline || isDeadlineExpired) {
+    const isExpired = reviewInfo?.review_deadline && isDeadlineExpired;
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center">
+          <div className={`p-8 border rounded ${isExpired ? 'border-red-600 bg-red-900/10' : 'border-gray-600'}`}>
+            <div className="text-4xl mb-4">{isExpired ? '⏰' : '📝'}</div>
+            <h1 className="text-xl font-bold text-white mb-2">
+              {isExpired ? '제출 마감' : '제출 준비 중'}
+            </h1>
+            <h2 className="text-lg font-medium text-white mb-4">{reviewInfo.title}</h2>
+            <p className="text-gray-400 text-sm mb-2">
+              {reviewInfo.author} | {reviewInfo.publisher}
+            </p>
+            {isExpired ? (
+              <>
+                <p className="text-red-400 text-sm mb-4">
+                  서평 제출 마감일: {new Date(reviewInfo.review_deadline!).toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+                <p className="text-gray-300 text-sm">
+                  죄송합니다. 서평 링크 제출 기간이 마감되었습니다.<br />
+                  다음 기회를 이용해 주세요.
+                </p>
+              </>
+            ) : (
+              <p className="text-gray-300 text-sm">
+                아직 서평 제출 기간이 설정되지 않았습니다.<br />
+                출판사에서 마감일을 설정하면 제출할 수 있습니다.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-md mx-auto">
@@ -126,8 +179,24 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
             {reviewInfo.author} | {reviewInfo.publisher}
           </p>
           <p className="text-gray-400 text-sm">
-            마감일: {new Date(reviewInfo.deadline).toLocaleDateString('ko-KR')}
+            당첨자 모집 마감일: {new Date(reviewInfo.deadline).toLocaleDateString('ko-KR')}
           </p>
+          {reviewInfo.review_deadline && (
+            <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
+              <p className="text-blue-400 text-sm font-medium">
+                📝 서평 제출 마감일: {new Date(reviewInfo.review_deadline).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+              <p className="text-blue-300 text-xs mt-1">
+                마감일 이후에는 서평 링크를 제출할 수 없습니다.
+              </p>
+            </div>
+          )}
         </div>
         
         {/* 제출 폼 */}
