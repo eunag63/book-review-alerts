@@ -15,6 +15,7 @@ interface SubmissionData {
   name: string;
   contact: string;
   review_link: string;
+  store_url: string;
 }
 
 export default function SubmitPage({ params }: { params: Promise<{ reviewId: string }> }) {
@@ -26,7 +27,8 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
   const [formData, setFormData] = useState<SubmissionData>({
     name: '',
     contact: '',
-    review_link: ''
+    review_link: '',
+    store_url: ''
   })
   const [isDeadlineExpired, setIsDeadlineExpired] = useState(false)
 
@@ -63,6 +65,22 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
       setLoading(false)
     }
   }
+
+  const formatPhoneNumber = (value: string) => {
+    const numbers = value.replace(/[^\d]/g, '');
+    if (numbers.length <= 3) {
+      return numbers;
+    } else if (numbers.length <= 7) {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    } else {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setFormData(prev => ({...prev, contact: formatted}));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -110,11 +128,11 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="max-w-md mx-auto text-center">
-          <div className="p-8 border border-gray-700 rounded">
-            <div className="text-4xl mb-4">✅</div>
-            <h1 className="text-xl font-bold text-white mb-2">제출 완료!</h1>
+      <div className="min-h-screen flex justify-center p-6" style={{ alignItems: 'flex-start', paddingTop: '25vh' }}>
+        <div className="max-w-md mx-auto">
+          <div className="p-4 text-center">
+            <div className="text-4xl mb-4">🍀</div>
+            <h1 className="text-xl font-bold text-white mb-3">제출 완료!</h1>
             <p className="text-gray-400 text-sm">
               서평 링크가 성공적으로 제출되었습니다.
             </p>
@@ -173,31 +191,31 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
       <div className="max-w-md mx-auto">
         {/* 서평단 정보 */}
         <div className="mb-6 p-4 border border-gray-700 rounded">
-          <h1 className="text-xl font-bold text-white mb-2">서평 링크 제출</h1>
           <h2 className="text-lg font-medium text-white mb-1">{reviewInfo.title}</h2>
           <p className="text-gray-400 text-sm">
             {reviewInfo.author} | {reviewInfo.publisher}
           </p>
-          <p className="text-gray-400 text-sm">
-            당첨자 모집 마감일: {new Date(reviewInfo.deadline).toLocaleDateString('ko-KR')}
-          </p>
-          {reviewInfo.review_deadline && (
-            <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded">
-              <p className="text-blue-400 text-sm font-medium">
-                📝 서평 제출 마감일: {new Date(reviewInfo.review_deadline).toLocaleDateString('ko-KR', {
+        </div>
+
+        {reviewInfo.review_deadline && (
+          <div className="mb-6 p-6 bg-gradient-to-r from-green-900/30 to-emerald-900/20 border border-green-400/50 rounded-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent"></div>
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="text-2xl">🍀</div>
+                <h3 className="text-lg font-semibold text-green-200">서평 링크를 제출해주세요!</h3>
+              </div>
+              <p className="text-green-300 text-sm leading-relaxed">
+                {new Date(reviewInfo.review_deadline).toLocaleDateString('ko-KR', {
                   year: 'numeric',
                   month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
-              <p className="text-blue-300 text-xs mt-1">
+                  day: 'numeric'
+                })}까지 서평 링크를 제출해주세요.<br/>
                 마감일 이후에는 서평 링크를 제출할 수 없습니다.
               </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
         
         {/* 제출 폼 */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -209,21 +227,22 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
               type="text"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
-              className="w-full p-3 border rounded-md bg-gray-800 border-gray-600 text-white"
+              className="w-full p-3 border rounded-md border-gray-600 text-white bg-transparent"
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              연락처 (이메일 또는 SNS ID) <span className="text-red-500">*</span>
+              연락처 <span className="text-red-500">*</span>
             </label>
             <input
-              type="text"
-              placeholder="example@email.com 또는 @sns_id"
+              type="tel"
+              placeholder="010-1234-5678"
               value={formData.contact}
-              onChange={(e) => setFormData(prev => ({...prev, contact: e.target.value}))}
-              className="w-full p-3 border rounded-md bg-gray-800 border-gray-600 text-white"
+              onChange={handlePhoneChange}
+              className="w-full p-3 border rounded-md border-gray-600 text-white bg-transparent"
+              maxLength={13}
               required
             />
           </div>
@@ -234,22 +253,38 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
             </label>
             <input
               type="url"
-              placeholder="https://blog.naver.com/..."
+              placeholder="https://로 시작하는 주소를 입력해주세요"
               value={formData.review_link}
               onChange={(e) => setFormData(prev => ({...prev, review_link: e.target.value}))}
-              className="w-full p-3 border rounded-md bg-gray-800 border-gray-600 text-white"
+              className="w-full p-3 border rounded-md border-gray-600 text-white bg-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              온라인 서점 URL <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="url"
+              placeholder="https://www.yes24.com/..."
+              value={formData.store_url}
+              onChange={(e) => setFormData(prev => ({...prev, store_url: e.target.value}))}
+              className="w-full p-3 border rounded-md border-gray-600 text-white bg-transparent"
               required
             />
             <p className="text-gray-400 text-xs mt-1">
-              블로그, 인스타그램, 유튜브 등 서평이 올라간 링크를 입력해주세요
+              교보문고일 경우 아이디를 입력해주세요
             </p>
           </div>
 
           <button
             type="submit"
-            disabled={submitting}
-            className="w-full py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50"
-            style={{ backgroundColor: '#80FD8F', color: '#000000' }}
+            disabled={submitting || !formData.name || !formData.contact || !formData.review_link || !formData.store_url}
+            className="w-full py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:bg-gray-600"
+            style={submitting || !formData.name || !formData.contact || !formData.review_link || !formData.store_url
+              ? { backgroundColor: '#4b5563', color: '#9ca3af' } 
+              : { backgroundColor: '#80FD8F', color: '#000000' }}
           >
             {submitting ? '제출 중...' : '서평 링크 제출하기'}
           </button>

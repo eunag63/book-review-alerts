@@ -8,10 +8,10 @@ export async function POST(
 ) {
   try {
     const { reviewId } = await params;
-    const { name, contact, review_link } = await request.json();
+    const { name, contact, review_link, store_url } = await request.json();
 
     // 필수 필드 검증
-    if (!name || !contact || !review_link) {
+    if (!name || !contact || !review_link || !store_url) {
       return NextResponse.json(
         { error: '모든 필드를 입력해주세요.' },
         { status: 400 }
@@ -21,6 +21,7 @@ export async function POST(
     // URL 유효성 검사
     try {
       new URL(review_link);
+      new URL(store_url);
     } catch {
       return NextResponse.json(
         { error: '올바른 링크 형식을 입력해주세요.' },
@@ -83,6 +84,7 @@ export async function POST(
         name,
         contact,
         review_link,
+        store_url,
         submitted_at: new Date().toISOString()
       })
       .select()

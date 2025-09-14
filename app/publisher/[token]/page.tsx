@@ -346,7 +346,7 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
             <div>
               <div className="text-2xl font-bold" style={{ color: '#80FD8F' }}>
                 {winners.filter(winner => 
-                  submissions.some(submission => submission.contact === winner.review_contact)
+                  submissions.some(submission => submission.contact === winner.contact)
                 ).length}
               </div>
               <div className="text-sm text-gray-400">서평 제출</div>
@@ -354,7 +354,7 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
             <div>
               <div className="text-2xl font-bold text-red-400">
                 {winners.filter(winner => 
-                  !submissions.some(submission => submission.contact === winner.review_contact)
+                  !submissions.some(submission => submission.contact === winner.contact)
                 ).length}
               </div>
               <div className="text-sm text-gray-400">미제출</div>
@@ -364,12 +364,12 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
           {/* 제출자 목록 */}
           <div className="mb-8">
             <h4 className="text-md font-medium text-white mb-3">
-              제출자 목록 <span style={{ color: '#80FD8F' }}>({winners.filter(winner => submissions.some(submission => submission.contact === winner.review_contact)).length}명)</span>
+              제출자 목록 <span style={{ color: '#80FD8F' }}>({winners.filter(winner => submissions.some(submission => submission.contact === winner.contact)).length}명)</span>
             </h4>
-            {winners.filter(winner => submissions.some(submission => submission.contact === winner.review_contact)).length > 0 ? (
+            {winners.filter(winner => submissions.some(submission => submission.contact === winner.contact)).length > 0 ? (
               <div className="space-y-3">
-                {winners.filter(winner => submissions.some(submission => submission.contact === winner.review_contact)).map((winner) => {
-                  const submission = submissions.find(submission => submission.contact === winner.review_contact);
+                {winners.filter(winner => submissions.some(submission => submission.contact === winner.contact)).map((winner) => {
+                  const submission = submissions.find(submission => submission.contact === winner.contact);
                   return (
                     <div key={winner.id} className="p-3 bg-gray-800 rounded">
                       <div className="mb-3">
@@ -440,11 +440,11 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
           {/* 미제출자 목록 */}
           <div>
             <h4 className="text-md font-medium text-white mb-3">
-              미제출자 목록 <span className="text-red-400">({winners.filter(winner => !submissions.some(submission => submission.contact === winner.review_contact)).length}명)</span>
+              미제출자 목록 <span className="text-red-400">({winners.filter(winner => !submissions.some(submission => submission.contact === winner.contact)).length}명)</span>
             </h4>
-            {winners.filter(winner => !submissions.some(submission => submission.contact === winner.review_contact)).length > 0 ? (
+            {winners.filter(winner => !submissions.some(submission => submission.contact === winner.contact)).length > 0 ? (
               <div className="space-y-3">
-                {winners.filter(winner => !submissions.some(submission => submission.contact === winner.review_contact)).map((winner) => (
+                {winners.filter(winner => !submissions.some(submission => submission.contact === winner.contact)).map((winner) => (
                   <div key={winner.id} className="p-3 bg-gray-800 rounded">
                     <div className="flex justify-between items-start">
                       <div className="space-y-1 flex-1">
