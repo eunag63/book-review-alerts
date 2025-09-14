@@ -1,6 +1,5 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
-import Link from "next/link";
 import Header from "./components/Header";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 
 interface ReviewInfo {
   id: number;
@@ -37,7 +36,7 @@ interface LinkPreview {
 }
 
 export default function PublisherDashboardPage({ params }: { params: Promise<{ token: string }> }) {
-  const [token, setToken] = useState<string>('')
+  const [, setToken] = useState<string>('')
   const [reviewInfo, setReviewInfo] = useState<ReviewInfo | null>(null)
   const [submissions, setSubmissions] = useState<LinkSubmission[]>([])
   const [winners, setWinners] = useState<Winner[]>([])

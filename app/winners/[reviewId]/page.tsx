@@ -19,6 +19,13 @@ interface WinnerData {
   addressDetail: string;
 }
 
+interface DaumPostcodeData {
+  address: string;
+  addressType: string;
+  bname: string;
+  buildingName: string;
+}
+
 export default function WinnersPage({ params }: { params: Promise<{ reviewId: string }> }) {
   const [reviewId, setReviewId] = useState<string>('')
   const [reviewInfo, setReviewInfo] = useState<ReviewInfo | null>(null)
@@ -69,9 +76,9 @@ export default function WinnersPage({ params }: { params: Promise<{ reviewId: st
       return;
     }
 
-    // @ts-ignore
+    // @ts-expect-error - Daum Postcode API is loaded externally
     new window.daum.Postcode({
-      oncomplete: function(data: any) {
+      oncomplete: function(data: DaumPostcodeData) {
         let fullAddress = data.address;
         let extraAddress = '';
 
