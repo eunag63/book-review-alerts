@@ -331,39 +331,10 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
           </div>
         </div>
 
-        {/* 당첨자 정보 */}
-        <div className="mb-6 p-4 border border-gray-700 rounded">
-          <h3 className="text-lg font-medium text-white mb-4">당첨자 정보 ({winners.length}명)</h3>
-          {winners.length > 0 ? (
-            <div className="space-y-3">
-              {winners.map((winner) => (
-                <div key={winner.id} className="p-3 bg-gray-800 rounded flex justify-between items-start">
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-4">
-                      <div className="text-white font-medium">{winner.name}</div>
-                      <div className="text-gray-400">{winner.review_contact}</div>
-                    </div>
-                    <div className="text-gray-300 text-sm">연락처: {winner.contact}</div>
-                    <div className="text-gray-300 text-sm">주소: {winner.address}</div>
-                  </div>
-                  <button
-                    onClick={() => copyWinnerInfo(winner)}
-                    className="px-3 py-1.5 text-sm font-medium rounded bg-emerald-600 text-white hover:bg-emerald-500 transition-colors ml-4"
-                  >
-                    복사
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-4">아직 당첨자 정보가 없습니다.</p>
-          )}
-        </div>
-
-        {/* 서평단 진행 현황 및 제출 상세 */}
+        {/* 서평단 진행 현황 */}
         <div className="p-4 border border-gray-700 rounded">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-medium text-white">서평단 진행 현황</h3>
+            <h3 className="text-lg font-medium text-white">서평단 진행 현황 ({winners.length}명)</h3>
           </div>
           
           {/* 통계 */}
@@ -390,47 +361,42 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
             </div>
           </div>
 
-          {/* 제출 상세 목록 */}
-          <div>
+          {/* 제출자 목록 */}
+          <div className="mb-8">
             <h4 className="text-md font-medium text-white mb-3">
-              서평 제출 상세 <span style={{ color: '#80FD8F' }}>({submissions.length}명)</span>
+              제출자 목록 <span style={{ color: '#80FD8F' }}>({winners.filter(winner => submissions.some(submission => submission.contact === winner.review_contact)).length}명)</span>
             </h4>
-            
-            {submissions.length > 0 ? (
+            {winners.filter(winner => submissions.some(submission => submission.contact === winner.review_contact)).length > 0 ? (
               <div className="space-y-3">
-                {submissions.map((submission) => {
-                  const isWinner = winners.some(winner => winner.review_contact === submission.contact);
+                {winners.filter(winner => submissions.some(submission => submission.contact === winner.review_contact)).map((winner) => {
+                  const submission = submissions.find(submission => submission.contact === winner.review_contact);
                   return (
-                    <div key={submission.id} className="p-3 bg-gray-800 rounded">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="text-white font-medium flex items-center gap-2">
-                            {submission.name}
-                            <span className="text-gray-400 text-sm">({submission.contact})</span>
-                            {isWinner && (
-                              <span className="px-2 py-0.5 text-xs rounded-full bg-green-900/30 text-green-300 border border-green-500">
-                                당첨자
-                              </span>
-                            )}
+                    <div key={winner.id} className="p-3 bg-gray-800 rounded">
+                      <div className="mb-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-4">
+                            <div className="text-white font-medium">{winner.name}</div>
+                            <div className="text-gray-400">{winner.review_contact}</div>
                           </div>
-                          <div className="text-gray-400 text-sm mt-1">
-                            제출일: {formatDate(submission.submitted_at)}
+                          <div className="text-gray-400 text-sm">
+                            제출일: {formatDate(submission!.submitted_at)}
                           </div>
                         </div>
                       </div>
-                      {/* 링크 미리보기 */}
-                      {linkPreviews[submission.review_link] ? (
-                        <div className="mt-2">
+                      
+                      {/* 서평 링크 미리보기 */}
+                      <div className="mt-3 pt-3 border-t border-gray-700">
+                        {linkPreviews[submission!.review_link] ? (
                           <a
-                            href={submission.review_link}
+                            href={submission!.review_link}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block p-3 bg-gray-900 rounded border border-gray-600 hover:border-gray-500 transition-colors"
                           >
                             <div className="flex gap-3">
-                              {linkPreviews[submission.review_link].image && (
+                              {linkPreviews[submission!.review_link].image && (
                                 <img 
-                                  src={linkPreviews[submission.review_link].image} 
+                                  src={linkPreviews[submission!.review_link].image} 
                                   alt=""
                                   className="w-16 h-16 rounded object-cover flex-shrink-0"
                                   onError={(e) => {
@@ -440,36 +406,67 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
                               )}
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-white text-sm line-clamp-2">
-                                  {linkPreviews[submission.review_link].title}
+                                  {linkPreviews[submission!.review_link].title}
                                 </h4>
                                 <p className="text-gray-400 text-xs mt-1 line-clamp-2">
-                                  {linkPreviews[submission.review_link].description}
+                                  {linkPreviews[submission!.review_link].description}
                                 </p>
                                 <p className="text-gray-500 text-xs mt-1">
-                                  {linkPreviews[submission.review_link].domain}
+                                  {linkPreviews[submission!.review_link].domain}
                                 </p>
                               </div>
                             </div>
                           </a>
-                        </div>
-                      ) : (
-                        <div className="mt-2">
+                        ) : (
                           <a 
-                            href={submission.review_link} 
+                            href={submission!.review_link} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="text-point underline text-sm break-all hover:text-white transition-colors"
+                            className="text-point underline text-sm break-all hover:text-white transition-colors block"
                           >
-                            {submission.review_link}
+                            {submission!.review_link}
                           </a>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">아직 제출된 서평 링크가 없습니다.</p>
+              <p className="text-gray-500 text-center py-4">아직 제출한 당첨자가 없습니다.</p>
+            )}
+          </div>
+
+          {/* 미제출자 목록 */}
+          <div>
+            <h4 className="text-md font-medium text-white mb-3">
+              미제출자 목록 <span className="text-red-400">({winners.filter(winner => !submissions.some(submission => submission.contact === winner.review_contact)).length}명)</span>
+            </h4>
+            {winners.filter(winner => !submissions.some(submission => submission.contact === winner.review_contact)).length > 0 ? (
+              <div className="space-y-3">
+                {winners.filter(winner => !submissions.some(submission => submission.contact === winner.review_contact)).map((winner) => (
+                  <div key={winner.id} className="p-3 bg-gray-800 rounded">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-4">
+                          <div className="text-white font-medium">{winner.name}</div>
+                          <div className="text-gray-400">{winner.review_contact}</div>
+                        </div>
+                        <div className="text-gray-300 text-sm">연락처: {winner.contact}</div>
+                        <div className="text-gray-300 text-sm">주소: {winner.address}</div>
+                      </div>
+                      <button
+                        onClick={() => copyWinnerInfo(winner)}
+                        className="px-3 py-1.5 text-sm font-medium rounded bg-emerald-600 text-white hover:bg-emerald-500 transition-colors ml-4"
+                      >
+                        복사
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">모든 당첨자가 서평을 제출했습니다!</p>
             )}
           </div>
         </div>
