@@ -25,9 +25,13 @@ export function getWeekRange(date: Date): { start: string; end: string } {
 }
 
 export function calcDDay(deadline: string): string {
-  const today = getKoreanDate()
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
   const target = new Date(deadline)
-  const diff = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  target.setHours(0, 0, 0, 0)
+  
+  const diff = Math.floor((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
   return diff <= 0 ? 'D-day' : `D-${diff}`
 }
 

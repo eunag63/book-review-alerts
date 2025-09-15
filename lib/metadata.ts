@@ -1,6 +1,5 @@
 // lib/metadata.ts
 import { Metadata } from 'next'
-import { getReviewCountsByPeriod } from './reviewUtils'
 
 export async function generateDynamicMetadata(): Promise<Metadata> {
   
