@@ -473,60 +473,107 @@ export default function AdminPage() {
             {reviewsLoading ? (
               <p className="text-center text-gray-500 py-8">로딩 중...</p>
             ) : reviews.length > 0 ? (
-              <div className="space-y-4">
-                {reviews.map((review) => {
-                  const existingDashboard = publisherDashboards.find(dashboard => dashboard.review_id === review.id);
-                  
-                  return (
-                    <div key={review.id} className="p-4 border border-gray-700 rounded">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-lg">{review.title}</h3>
-                          <p className="text-sm text-gray-400">
-                            {[review.publisher, review.author].filter(Boolean).join(' | ')}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            마감: {formatDeadline(review.deadline)} | 
-                            등록일: {formatDate(review.created_at)}
-                          </p>
-                          {existingDashboard && (
-                            <p className="text-sm text-green-400 mt-1">
-                              출판사 대시보드 생성됨: {formatDate(existingDashboard.created_at)}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => generateSalesLink(review.id)}
-                            className="px-3 py-1 text-xs font-medium rounded transition-colors"
-                            style={{ backgroundColor: '#80FD8F', color: 'black' }}
-                          >
-                            영업 링크
-                          </button>
-                          {existingDashboard ? (
-                            <button
-                              onClick={() => copyPublisherLink(existingDashboard.token)}
-                              className="px-3 py-1 text-xs font-medium rounded transition-colors"
-                              style={{ backgroundColor: '#80FD8F', color: 'black' }}
-                            >
-                              출판사 링크
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => createPublisherDashboard(review.id)}
-                              className="px-3 py-1 text-xs font-medium rounded transition-colors bg-gray-600 text-white hover:bg-gray-700"
-                            >
-                              출판사 생성
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        출처: {review.source === 'registration' ? '등록 신청' : '직접 등록'}
-                      </div>
+              <div className="space-y-6">
+                {/* 출판사 대시보드 생성된 서평단 */}
+                {publisherDashboards.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3">
+                      출판사 대시보드 생성됨 ({publisherDashboards.length}개)
+                    </h3>
+                    <div className="space-y-4">
+                      {publisherDashboards.map((dashboard) => {
+                        const review = reviews.find(r => r.id === dashboard.review_id);
+                        if (!review) return null;
+                        
+                        return (
+                          <div key={review.id} className="p-4 border border-gray-700 rounded">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-lg">{review.title}</h4>
+                                <p className="text-sm text-gray-400">
+                                  {[review.publisher, review.author].filter(Boolean).join(' | ')}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  마감: {formatDeadline(review.deadline)} | 
+                                  등록일: {formatDate(review.created_at)}
+                                </p>
+                                <p className="text-sm text-gray-400 mt-1">
+                                  출판사 대시보드 생성됨: {formatDate(dashboard.created_at)}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => generateSalesLink(review.id)}
+                                  className="px-3 py-1 text-xs font-medium rounded transition-colors"
+                                  style={{ backgroundColor: '#80FD8F', color: 'black' }}
+                                >
+                                  영업 링크
+                                </button>
+                                <button
+                                  onClick={() => copyPublisherLink(dashboard.token)}
+                                  className="px-3 py-1 text-xs font-medium rounded transition-colors"
+                                  style={{ backgroundColor: '#80FD8F', color: 'black' }}
+                                >
+                                  출판사 링크
+                                </button>
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              출판사 대시보드 활성화
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                )}
+
+                {/* 대시보드가 없는 일반 서평단 */}
+                {reviews.filter(review => !publisherDashboards.find(d => d.review_id === review.id)).length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 text-gray-300">
+                      일반 서평단 ({reviews.filter(review => !publisherDashboards.find(d => d.review_id === review.id)).length}개)
+                    </h3>
+                    <div className="space-y-4">
+                      {reviews
+                        .filter(review => !publisherDashboards.find(d => d.review_id === review.id))
+                        .map((review) => (
+                          <div key={review.id} className="p-4 border border-gray-700 rounded">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-lg">{review.title}</h4>
+                                <p className="text-sm text-gray-400">
+                                  {[review.publisher, review.author].filter(Boolean).join(' | ')}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  마감: {formatDeadline(review.deadline)} | 
+                                  등록일: {formatDate(review.created_at)}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => generateSalesLink(review.id)}
+                                  className="px-3 py-1 text-xs font-medium rounded transition-colors"
+                                  style={{ backgroundColor: '#80FD8F', color: 'black' }}
+                                >
+                                  영업 링크
+                                </button>
+                                <button
+                                  onClick={() => createPublisherDashboard(review.id)}
+                                  className="px-3 py-1 text-xs font-medium rounded transition-colors bg-gray-600 text-white hover:bg-gray-700"
+                                >
+                                  출판사 생성
+                                </button>
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              출처: {review.source === 'registration' ? '등록 신청' : '직접 등록'}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-gray-500 text-center py-8">등록된 서평단이 없습니다.</p>
