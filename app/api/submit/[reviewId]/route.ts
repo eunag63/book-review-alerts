@@ -18,13 +18,12 @@ export async function POST(
       );
     }
 
-    // URL 유효성 검사
+    // 서평 링크 URL 유효성 검사
     try {
       new URL(review_link);
-      new URL(store_url);
     } catch {
       return NextResponse.json(
-        { error: '올바른 링크 형식을 입력해주세요.' },
+        { error: '올바른 서평 링크 형식을 입력해주세요.' },
         { status: 400 }
       );
     }

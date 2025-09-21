@@ -21,6 +21,7 @@ interface SubmissionData {
 export default function SubmitPage({ params }: { params: Promise<{ reviewId: string }> }) {
   const [reviewId, setReviewId] = useState<string>('')
   const [reviewInfo, setReviewInfo] = useState<ReviewInfo | null>(null)
+  const [guidelines, setGuidelines] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -31,6 +32,8 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
     store_url: ''
   })
   const [isDeadlineExpired, setIsDeadlineExpired] = useState(false)
+  const [requiredChecked, setRequiredChecked] = useState(false)
+  const [guidelineChecks, setGuidelineChecks] = useState<{[key: number]: boolean}>({})
 
   useEffect(() => {
     async function initializeSubmission() {
@@ -48,6 +51,7 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
       
       if (response.ok && data.review) {
         setReviewInfo(data.review)
+        setGuidelines(data.guidelines || '')
         
         // 마감일 체크
         if (data.review.review_deadline) {
@@ -189,14 +193,6 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-md mx-auto">
-        {/* 서평단 정보 */}
-        <div className="mb-6 p-4 border border-gray-700 rounded">
-          <h2 className="text-lg font-medium text-white mb-1">{reviewInfo.title}</h2>
-          <p className="text-gray-400 text-sm">
-            {reviewInfo.author} | {reviewInfo.publisher}
-          </p>
-        </div>
-
         {reviewInfo.review_deadline && (
           <div className="mb-6 p-6 bg-gradient-to-r from-green-900/30 to-emerald-900/20 border border-green-400/50 rounded-lg relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent"></div>
@@ -216,6 +212,15 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
             </div>
           </div>
         )}
+
+        {/* 서평단 정보 */}
+        <div className="mb-6 p-4 border border-gray-700 rounded">
+          <h2 className="text-lg font-medium text-white mb-1">{reviewInfo.title}</h2>
+          <p className="text-gray-400 text-sm">
+            {reviewInfo.author} | {reviewInfo.publisher}
+          </p>
+        </div>
+
         
         {/* 제출 폼 */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -266,8 +271,8 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
               온라인 서점 URL <span className="text-red-500">*</span>
             </label>
             <input
-              type="url"
-              placeholder="https://www.yes24.com/..."
+              type="text"
+              placeholder="https://로 시작하는 주소를 입력해주세요"
               value={formData.store_url}
               onChange={(e) => setFormData(prev => ({...prev, store_url: e.target.value}))}
               className="w-full p-3 border rounded-md border-gray-600 text-white bg-transparent"
@@ -278,13 +283,72 @@ export default function SubmitPage({ params }: { params: Promise<{ reviewId: str
             </p>
           </div>
 
+          {/* 서평 작성 가이드라인 확인 */}
+          <div className="p-4 border rounded-md border-gray-600">
+            <h3 className="text-lg font-medium text-white mb-4">서평 작성 확인사항</h3>
+            
+            {/* 필수 사항 */}
+            <div className="space-y-3">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={requiredChecked}
+                  onChange={(e) => setRequiredChecked(e.target.checked)}
+                  className="w-4 h-4 bg-gray-700 border-gray-600 rounded focus:ring-green-500 accent-green-500 mt-0.5"
+                />
+                <div className="flex-1">
+                  <span className="text-white text-sm font-medium block">
+                    도서제공 표시 포함
+                  </span>
+                  <span className="text-gray-400 text-xs">
+                    #도서제공 해시태그 또는 &quot;출판사로부터 도서를 제공받아 작성한 리뷰입니다&quot; 문구 포함
+                  </span>
+                </div>
+              </label>
+              
+              {/* 추가 가이드라인 */}
+              {guidelines && guidelines.split('\n').filter(line => line.trim()).map((guideline, index) => (
+                <label key={index} className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(guidelineChecks[index])}
+                    onChange={(e) => setGuidelineChecks(prev => ({
+                      ...prev,
+                      [index]: e.target.checked
+                    }))}
+                    className="w-4 h-4 bg-gray-700 border-gray-600 rounded focus:ring-green-500 accent-green-500 mt-0.5"
+                  />
+                  <span className="text-white text-sm flex-1">
+                    {guideline.trim()}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <button
             type="submit"
-            disabled={submitting || !formData.name || !formData.contact || !formData.review_link || !formData.store_url}
+            disabled={Boolean(
+              submitting || 
+              !formData.name || 
+              !formData.contact || 
+              !formData.review_link || 
+              !formData.store_url || 
+              !requiredChecked || 
+              (guidelines && guidelines.split('\n').filter(line => line.trim()).some((_, index) => !guidelineChecks[index]))
+            )}
             className="w-full py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:bg-gray-600"
-            style={submitting || !formData.name || !formData.contact || !formData.review_link || !formData.store_url
-              ? { backgroundColor: '#4b5563', color: '#9ca3af' } 
-              : { backgroundColor: '#80FD8F', color: '#000000' }}
+            style={
+              submitting || 
+              !formData.name || 
+              !formData.contact || 
+              !formData.review_link || 
+              !formData.store_url || 
+              !requiredChecked || 
+              (guidelines && guidelines.split('\n').filter(line => line.trim()).some((_, index) => !guidelineChecks[index]))
+                ? { backgroundColor: '#4b5563', color: '#9ca3af' } 
+                : { backgroundColor: '#80FD8F', color: '#000000' }
+            }
           >
             {submitting ? '제출 중...' : '서평 링크 제출하기'}
           </button>

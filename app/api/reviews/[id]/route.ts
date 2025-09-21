@@ -22,8 +22,16 @@ export async function GET(
       );
     }
 
+    // 해당 서평단의 출판사 대시보드 가이드라인 조회
+    const { data: dashboard } = await supabase
+      .from('publisher_dashboards')
+      .select('guidelines')
+      .eq('review_id', parseInt(id))
+      .single();
+
     return NextResponse.json({
-      review
+      review,
+      guidelines: dashboard?.guidelines || ''
     });
 
   } catch (error) {

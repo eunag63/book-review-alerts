@@ -36,7 +36,7 @@ interface LinkPreview {
 }
 
 export default function PublisherDashboardPage({ params }: { params: Promise<{ token: string }> }) {
-  const [, setToken] = useState<string>('')
+  const [token, setToken] = useState<string>('')
   const [reviewInfo, setReviewInfo] = useState<ReviewInfo | null>(null)
   const [submissions, setSubmissions] = useState<LinkSubmission[]>([])
   const [winners, setWinners] = useState<Winner[]>([])
@@ -44,6 +44,8 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
   const [isEditingDeadline, setIsEditingDeadline] = useState(false)
   const [tempDeadline, setTempDeadline] = useState('')
   const [linkPreviews, setLinkPreviews] = useState<Record<string, LinkPreview>>({})
+  const [guidelines, setGuidelines] = useState('')
+  const [guidelineItems, setGuidelineItems] = useState<string[]>([''])
 
   useEffect(() => {
     async function initializeDashboard() {
@@ -54,6 +56,15 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
     initializeDashboard();
   }, [params])
 
+  useEffect(() => {
+    if (guidelines) {
+      const items = guidelines.split('\n').filter(line => line.trim());
+      setGuidelineItems(items.length > 0 ? items : ['']);
+    } else {
+      setGuidelineItems(['']);
+    }
+  }, [guidelines])
+
   const fetchPublisherData = async (publisherToken: string) => {
     try {
       const response = await fetch(`/api/publisher/${publisherToken}`)
@@ -63,6 +74,7 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
         setReviewInfo(data.review)
         setSubmissions(data.submissions || [])
         setWinners(data.winners || [])
+        setGuidelines(data.guidelines || '')
       } else {
         alert('출판사 대시보드를 찾을 수 없습니다.')
       }
@@ -131,6 +143,44 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
   const handleDeadlineCancel = () => {
     setIsEditingDeadline(false);
     setTempDeadline('');
+  };
+
+  const updateGuidelines = async (newGuidelines: string) => {
+    try {
+      const response = await fetch(`/api/publisher/${token}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ guidelines: newGuidelines }),
+      });
+
+      if (response.ok) {
+        setGuidelines(newGuidelines);
+        alert('서평 가이드라인이 저장되었습니다.');
+      } else {
+        alert('가이드라인 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('가이드라인 저장 오류:', error);
+      alert('가이드라인 저장에 실패했습니다.');
+    }
+  };
+
+  const handleGuidelinesSubmit = () => {
+    const filteredItems = guidelineItems.filter(item => item.trim());
+    updateGuidelines(filteredItems.join('\n'));
+  };
+
+  const addGuidelineItem = () => {
+    setGuidelineItems([...guidelineItems, '']);
+  };
+
+
+  const updateGuidelineItem = (index: number, value: string) => {
+    const newItems = [...guidelineItems];
+    newItems[index] = value;
+    setGuidelineItems(newItems);
   };
 
   const formatDate = (dateString: string) => {
@@ -288,6 +338,49 @@ export default function PublisherDashboardPage({ params }: { params: Promise<{ t
               </div>
             </div>
           )}
+        </div>
+
+        {/* 서평 가이드라인 설정 */}
+        <div className="mb-6 p-4 border border-gray-700 rounded">
+          <h3 className="text-lg font-medium text-white mb-4">서평 가이드라인</h3>
+          <div className="space-y-3">
+            <div className="text-gray-400 text-sm mb-2">
+              서평자들에게 보여줄 추가 가이드라인을 입력하세요. 각 항목은 개별 체크박스로 표시됩니다.
+            </div>
+            <div className="text-gray-500 text-xs mb-3">
+              예시: 필수 키워드 포함, 최소 500자 이상 작성
+            </div>
+            
+            <div className="space-y-3">
+              {guidelineItems.map((item, index) => (
+                <div key={index} className="flex gap-2 items-center">
+                  <span className="text-gray-400 text-sm w-4">{index + 1}.</span>
+                  <input
+                    type="text"
+                    value={item}
+                    onChange={(e) => updateGuidelineItem(index, e.target.value)}
+                    placeholder="가이드라인을 입력하세요"
+                    className="flex-1 bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={addGuidelineItem}
+                className="px-3 py-1.5 text-sm font-medium rounded bg-gray-600 text-white hover:bg-gray-500 transition-colors"
+              >
+                + 추가
+              </button>
+              <button
+                onClick={handleGuidelinesSubmit}
+                className="px-3 py-1.5 text-sm font-medium rounded bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+              >
+                저장
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* 통합된 관리 섹션 */}

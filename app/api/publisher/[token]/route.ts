@@ -58,11 +58,62 @@ export async function GET(
     return NextResponse.json({
       review: dashboard.reviews,
       submissions: submissions || [],
-      winners: winners || []
+      winners: winners || [],
+      guidelines: dashboard.guidelines || ''
     });
 
   } catch (error) {
     console.error('출판사 대시보드 조회 오류:', error);
+    return NextResponse.json(
+      { error: '서버 오류가 발생했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+// 출판사 대시보드 가이드라인 업데이트
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  try {
+    const { token } = await params;
+    const { guidelines } = await request.json();
+
+    // 출판사 대시보드 조회
+    const { data: dashboard, error: dashboardError } = await supabase
+      .from('publisher_dashboards')
+      .select('id')
+      .eq('token', token)
+      .single();
+
+    if (dashboardError || !dashboard) {
+      return NextResponse.json(
+        { error: '출판사 대시보드를 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    // 가이드라인 업데이트
+    const { error: updateError } = await supabase
+      .from('publisher_dashboards')
+      .update({ guidelines })
+      .eq('token', token);
+
+    if (updateError) {
+      console.error('가이드라인 업데이트 오류:', updateError);
+      return NextResponse.json(
+        { error: '가이드라인 업데이트에 실패했습니다.' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      message: '가이드라인이 업데이트되었습니다.'
+    });
+
+  } catch (error) {
+    console.error('가이드라인 업데이트 오류:', error);
     return NextResponse.json(
       { error: '서버 오류가 발생했습니다.' },
       { status: 500 }
