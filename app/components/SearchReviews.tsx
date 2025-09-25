@@ -20,7 +20,13 @@ export default function SearchReviews() {
     const { data, error } = await supabase.from('reviews').select('*')
     if (!error && data) {
       const list = (data as Review[]).filter(isDeadlineValid)
-      list.sort((a, b) => b.id - a.id) // 최신순 정렬
+      list.sort((a, b) => {
+        // source가 registration인 항목을 상단에 고정
+        if (a.source === 'registration' && b.source !== 'registration') return -1
+        if (a.source !== 'registration' && b.source === 'registration') return 1
+        // 둘 다 registration이거나 둘 다 아닌 경우 최신순 정렬
+        return b.id - a.id
+      })
       // 배지 할당
       const listWithBadges = await assignBadgesToReviews(list)
       setResults(listWithBadges)
@@ -60,9 +66,13 @@ export default function SearchReviews() {
         )
       if (!error && data) {
         const list = (data as Review[]).filter(isDeadlineValid)
-        list.sort(
-          (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-        )
+        list.sort((a, b) => {
+          // source가 registration인 항목을 상단에 고정
+          if (a.source === 'registration' && b.source !== 'registration') return -1
+          if (a.source !== 'registration' && b.source === 'registration') return 1
+          // 둘 다 registration이거나 둘 다 아닌 경우 마감일 순 정렬
+          return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+        })
         // 검색 결과에도 배지 할당
         const listWithBadges = await assignBadgesToReviews(list)
         setResults(listWithBadges)
@@ -101,7 +111,13 @@ export default function SearchReviews() {
     const { data, error } = await queryBuilder
     if (!error && data) {
       const list = (data as Review[]).filter(isDeadlineValid)
-      list.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+      list.sort((a, b) => {
+        // source가 registration인 항목을 상단에 고정
+        if (a.source === 'registration' && b.source !== 'registration') return -1
+        if (a.source !== 'registration' && b.source === 'registration') return 1
+        // 둘 다 registration이거나 둘 다 아닌 경우 마감일 순 정렬
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+      })
       // 키워드 필터 결과에도 배지 할당
       const listWithBadges = await assignBadgesToReviews(list)
       setResults(listWithBadges)
