@@ -126,8 +126,9 @@ export default function SearchReviews() {
     setLoading(false)
   }, [loadAllReviews])
 
-  const handleClick = async (reviewId: number) => {
-    await supabase.from('log_clicks').insert([{ review_id: reviewId }])
+  const handleClick = (reviewId: number, source: string = 'website') => {
+    // RedirectClient에서 기록하므로 여기서는 리다이렉트만
+    window.location.href = `/redirect/${reviewId}?source=${source}`
   }
 
   return (
@@ -169,10 +170,11 @@ export default function SearchReviews() {
                 <p className="text-sm text-point mb-1">{calcDDay(r.deadline)}</p>
                 <div className="flex justify-between items-center">
                   <a
-                    href={r.url}
-                    onClick={() => handleClick(r.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      handleClick(r.id, 'website')
+                    }}
                     className="text-point underline text-sm mt-1 inline-block"
                   >
                     신청하러 가기
