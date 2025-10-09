@@ -59,14 +59,20 @@ export default function KakaoLogin({ onLoginSuccess, onLoginError }: KakaoLoginP
       script.async = true
       script.onload = () => {
         if (window.Kakao && !window.Kakao.isInitialized()) {
-          window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY)
-          setIsKakaoLoaded(true)
+          const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY
+          if (kakaoKey) {
+            window.Kakao.init(kakaoKey)
+            setIsKakaoLoaded(true)
+          }
         }
       }
       document.head.appendChild(script)
     } else if (window.Kakao) {
       if (!window.Kakao.isInitialized()) {
-        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY)
+        const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY
+        if (kakaoKey) {
+          window.Kakao.init(kakaoKey)
+        }
       }
       setIsKakaoLoaded(true)
     }
