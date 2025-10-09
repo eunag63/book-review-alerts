@@ -4,8 +4,9 @@ import { supabase } from '../../../../../lib/supabaseClient'
 // 특정 마감일 조회
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const { data, error } = await supabase
       .from('user_selected_reviews')
@@ -38,8 +39,9 @@ export async function GET(
 // 마감일 정보 수정
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const body = await request.json()
     const {
@@ -106,8 +108,9 @@ export async function PUT(
 // 마감일 삭제
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const { error } = await supabase
       .from('user_selected_reviews')
