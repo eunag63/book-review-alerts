@@ -35,12 +35,20 @@ export default function Header() {
         
         <div className="flex items-center gap-4">
           {user ? (
-            <button
-              onClick={logout}
-              className="text-white text-sm hover:text-gray-300 transition-colors"
-            >
-              로그아웃
-            </button>
+            <>
+              <Link 
+                href="/my-deadlines"
+                className="text-white text-sm hover:text-gray-300 transition-colors"
+              >
+                내 마감일
+              </Link>
+              <button
+                onClick={logout}
+                className="text-white text-sm hover:text-gray-300 transition-colors"
+              >
+                로그아웃
+              </button>
+            </>
           ) : (
             <KakaoLogin onLoginSuccess={handleLoginSuccess} />
           )}
