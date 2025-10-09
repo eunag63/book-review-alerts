@@ -8,14 +8,22 @@ import { assignBadgesToReviews } from '../lib/clickAnalytics'
 // import BannerAd from './components/BannerAd'
 import SearchReviews from './components/SearchReviews'
 import DescriptionBubble from './components/DescriptionBubble'
+import { useAuth } from '../lib/authContext'
 
 export default function HomePage() {
+  const { user } = useAuth()
   const [availablePeriods, setAvailablePeriods] = useState<string[]>([])
   const [currentPeriodIndex, setCurrentPeriodIndex] = useState(0)
   const [reviews, setReviews] = useState<ReviewWithBadge[]>([])
   const [periodText, setPeriodText] = useState('')
   const [loading, setLoading] = useState(true)
   const [showAll, setShowAll] = useState(false)
+  const [urgentDeadline, setUrgentDeadline] = useState<{
+    id: number
+    book_title: string
+    deadline: string
+    submission_status: 'pending' | 'submitted'
+  } | null>(null)
   const validReviews = reviews.filter(isDeadlineValid)
   const displayReviews = showAll ? validReviews : validReviews.slice(0, 2)
 
@@ -36,6 +44,47 @@ export default function HomePage() {
     }
     loadInitialData()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      fetchUrgentDeadline()
+    }
+  }, [user])
+
+  const fetchUrgentDeadline = async () => {
+    if (!user) return
+
+    try {
+      const response = await fetch(`/api/user/deadlines?user_id=${user.id}`)
+      const result = await response.json()
+
+      if (result.success && result.deadlines.length > 0) {
+        const today = new Date()
+        const todayString = today.getFullYear() + '-' + 
+          String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(today.getDate()).padStart(2, '0')
+
+        // 가장 가까운 마감일 찾기 (오늘 이후)
+        const upcomingDeadlines = result.deadlines.filter((d: { deadline: string }) => d.deadline >= todayString)
+        if (upcomingDeadlines.length > 0) {
+          setUrgentDeadline(upcomingDeadlines[0])
+        }
+      }
+    } catch (error) {
+      console.error('마감일 조회 오류:', error)
+    }
+  }
+
+  const getDaysRemaining = (deadline: string) => {
+    const today = new Date()
+    const deadlineDate = new Date(deadline)
+    const diffTime = deadlineDate.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays < 0) return '마감'
+    if (diffDays === 0) return 'D-day'
+    return `D-${diffDays}`
+  }
 
   const handlePeriodChange = async (direction: 'prev' | 'next') => {
     const newIndex =
@@ -69,6 +118,27 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
+      {/* 로그인한 사용자의 긴급 마감일 표시 */}
+      {user && urgentDeadline && (
+        <section className="mb-6 p-4 bg-[#80FD8F] text-black rounded">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-sm">🍀 다가오는 마감일</h3>
+              <p className="font-medium">{urgentDeadline.book_title}</p>
+              <p className="text-xs">
+                {urgentDeadline.deadline} ({getDaysRemaining(urgentDeadline.deadline)})
+              </p>
+            </div>
+            <button
+              onClick={() => window.location.href = '/my-deadlines'}
+              className="bg-black text-white px-3 py-1 rounded text-xs hover:bg-gray-800 transition-colors"
+            >
+              전체 보기
+            </button>
+          </div>
+        </section>
+      )}
+      
       <section className="mb-8">
         {availablePeriods.length === 0 ? (
           <>

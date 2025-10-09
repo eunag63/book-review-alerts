@@ -174,16 +174,15 @@ export default function MyDeadlinesPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">내 서평단 마감일</h1>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-[#80FD8F] text-black px-4 py-2 rounded font-medium hover:bg-green-400 transition-colors"
-        >
-          {showAddForm ? '취소' : '마감일 추가'}
-        </button>
-      </div>
+    <div className="min-h-screen relative">
+      {/* 플로팅 마감일 추가 버튼 */}
+      <button
+        onClick={() => setShowAddForm(!showAddForm)}
+        className="fixed bottom-6 right-6 bg-[#80FD8F] text-black px-6 py-3 rounded-full shadow-lg font-medium hover:scale-105 transition-transform z-10 flex items-center gap-2"
+      >
+        <span className="text-lg">{showAddForm ? '✕' : '+'}</span>
+        <span className="hidden sm:inline">{showAddForm ? '취소' : '마감일 추가'}</span>
+      </button>
 
       {/* 캘린더 헤더 */}
       <div className="flex items-center justify-between mb-6">
@@ -227,11 +226,10 @@ export default function MyDeadlinesPage() {
                 <div
                   onClick={() => setSelectedDate(selectedDate?.toDateString() === day.date.toDateString() ? null : day.date)}
                   className={`
-                    min-h-[80px] p-2 border rounded cursor-pointer relative
-                    ${day.isCurrentMonth ? 'bg-gray-800 border-gray-600' : 'bg-gray-900 border-gray-700'}
-                    ${isToday(day.date) ? 'ring-2 ring-[#80FD8F]' : ''}
-                    ${isSelected ? 'bg-gray-700' : ''}
-                    hover:bg-gray-700 transition-colors
+                    min-h-[80px] p-2 rounded cursor-pointer relative bg-black
+                    ${isToday(day.date) || isSelected ? 'border-2 border-[#80FD8F]' : 
+                      day.isCurrentMonth ? 'border border-white' : 'border border-gray-500'}
+                    hover:bg-gray-900 transition-colors
                   `}
                 >
                   <div className={`text-sm ${day.isCurrentMonth ? 'text-white' : 'text-gray-500'}`}>
@@ -240,57 +238,68 @@ export default function MyDeadlinesPage() {
                   
                   {/* 마감일 표시 */}
                   <div className="flex gap-1 mt-1 flex-wrap">
-                    {day.deadlines.map((deadline) => (
-                      <span
-                        key={deadline.id}
-                        className={`
-                          text-sm
-                          ${deadline.submission_status === 'submitted' 
-                            ? 'text-[#80FD8F]' 
-                            : 'text-gray-300'
-                          }
-                        `}
-                      >
-                        🍀
-                      </span>
-                    ))}
+                    {day.deadlines.map((deadline) => {
+                      const totalCount = day.deadlines.length
+                      let sizeClass = 'text-sm'
+                      
+                      if (totalCount === 1) {
+                        sizeClass = 'text-4xl'
+                      } else if (totalCount === 2) {
+                        sizeClass = 'text-xl'
+                      } else if (totalCount >= 3) {
+                        sizeClass = 'text-sm'
+                      }
+                      
+                      return (
+                        <span
+                          key={deadline.id}
+                          className={`
+                            ${sizeClass}
+                            ${deadline.submission_status === 'submitted' 
+                              ? 'text-[#80FD8F]' 
+                              : 'text-white'
+                            }
+                          `}
+                        >
+                          🍀
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
 
                 {/* 각 주의 끝(토요일)에 선택된 날짜가 그 주에 있으면 정보 표시 */}
-                {isEndOfWeek && selectedDate && selectedIndex >= Math.floor(index / 7) * 7 && selectedIndex <= index && (
-                  <div className="col-span-7 bg-gray-700 p-3 rounded mt-1 mb-1">
-                    {(() => {
-                      const selectedDateString = selectedDate.getFullYear() + '-' + 
-                        String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                        String(selectedDate.getDate()).padStart(2, '0')
-                      const dayDeadlines = deadlines.filter(d => d.deadline === selectedDateString)
-                      
-                      if (dayDeadlines.length === 0) {
-                        return <p className="text-gray-400 text-xs">마감일이 없습니다.</p>
-                      }
+                {isEndOfWeek && selectedDate && selectedIndex >= Math.floor(index / 7) * 7 && selectedIndex <= index && (() => {
+                  const selectedDateString = selectedDate.getFullYear() + '-' + 
+                    String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(selectedDate.getDate()).padStart(2, '0')
+                  const dayDeadlines = deadlines.filter(d => d.deadline === selectedDateString)
+                  
+                  if (dayDeadlines.length === 0) {
+                    return null
+                  }
 
-                      return (
-                        <div className="space-y-1">
-                          {dayDeadlines.map((deadline) => (
-                            <div key={deadline.id} className="flex items-center justify-between text-xs">
-                              <span className="text-white">{deadline.book_title}</span>
-                              <span className={`px-1 py-0.5 rounded text-xs ${
-                                getDaysRemaining(deadline.deadline) === '마감' 
-                                  ? 'bg-gray-600 text-white'
-                                  : getDaysRemaining(deadline.deadline) === 'D-day'
-                                  ? 'bg-[#80FD8F] text-black'
-                                  : 'bg-gray-600 text-white'
-                              }`}>
-                                {getDaysRemaining(deadline.deadline)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )
-                    })()}
-                  </div>
-                )}
+                  return (
+                    <div className="col-span-7 bg-[#80FD8F] text-black p-3 rounded mt-1 mb-1">
+                      <div className="space-y-1">
+                        {dayDeadlines.map((deadline) => (
+                          <div key={deadline.id} className="flex items-center justify-between text-xs">
+                            <span className="text-black">{deadline.book_title}</span>
+                            <span className={`px-1 py-0.5 rounded text-xs ${
+                              getDaysRemaining(deadline.deadline) === '마감' 
+                                ? 'bg-black text-white'
+                                : getDaysRemaining(deadline.deadline) === 'D-day'
+                                ? 'bg-white text-black'
+                                : 'bg-black text-white'
+                            }`}>
+                              {getDaysRemaining(deadline.deadline)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()}
               </React.Fragment>
             )
           })}
@@ -299,8 +308,10 @@ export default function MyDeadlinesPage() {
 
 
       {showAddForm && (
-        <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-lg mb-6">
-          <h2 className="text-lg font-semibold mb-4">새 마감일 추가</h2>
+        <form onSubmit={handleSubmit} className="bg-black border border-white rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 text-center">
+            <span className="text-[#80FD8F]">🍀</span> 새 마감일 추가 <span className="text-[#80FD8F]">🍀</span>
+          </h2>
           
           <div className="space-y-4">
             <div>
@@ -309,7 +320,7 @@ export default function MyDeadlinesPage() {
                 type="text"
                 value={formData.book_title}
                 onChange={(e) => setFormData({ ...formData, book_title: e.target.value })}
-                className="w-full p-3 bg-gray-700 border border-gray-600 rounded text-white"
+                className="w-full p-3 bg-black border border-white rounded text-white focus:border-[#80FD8F] focus:outline-none transition-colors"
                 placeholder="당첨된 서평단 책 제목을 입력하세요"
                 required
               />
@@ -321,7 +332,7 @@ export default function MyDeadlinesPage() {
                 type="text"
                 value={formData.author}
                 onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                className="w-full p-3 bg-gray-700 border border-gray-600 rounded text-white"
+                className="w-full p-3 bg-black border border-white rounded text-white focus:border-[#80FD8F] focus:outline-none transition-colors"
                 placeholder="작가명 (선택사항)"
               />
             </div>
@@ -332,7 +343,7 @@ export default function MyDeadlinesPage() {
                 type="text"
                 value={formData.publisher}
                 onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
-                className="w-full p-3 bg-gray-700 border border-gray-600 rounded text-white"
+                className="w-full p-3 bg-black border border-white rounded text-white focus:border-[#80FD8F] focus:outline-none transition-colors"
                 placeholder="출판사명 (선택사항)"
               />
             </div>
@@ -343,7 +354,7 @@ export default function MyDeadlinesPage() {
                 type="date"
                 value={formData.deadline}
                 onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-                className="w-full p-3 bg-gray-700 border border-gray-600 rounded text-white"
+                className="w-full p-3 bg-black border border-white rounded text-white focus:border-[#80FD8F] focus:outline-none transition-colors"
                 required
               />
             </div>
@@ -352,16 +363,16 @@ export default function MyDeadlinesPage() {
           <div className="flex gap-3 mt-6">
             <button
               type="submit"
-              className="bg-[#80FD8F] text-black px-4 py-2 rounded font-medium hover:bg-green-400 transition-colors"
+              className="bg-[#80FD8F] text-black px-6 py-3 rounded-full font-medium hover:scale-105 transition-transform flex-1"
             >
-              등록
+              ✓ 등록
             </button>
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="bg-gray-600 text-white px-4 py-2 rounded font-medium hover:bg-gray-500 transition-colors"
+              className="bg-black border border-white text-white px-6 py-3 rounded-full font-medium hover:bg-white hover:text-black transition-all flex-1"
             >
-              취소
+              ✕ 취소
             </button>
           </div>
         </form>
@@ -371,12 +382,6 @@ export default function MyDeadlinesPage() {
       {deadlines.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">등록된 마감일이 없습니다.</p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-[#80FD8F] text-black px-4 py-2 rounded font-medium hover:bg-green-400 transition-colors"
-          >
-            첫 마감일 추가하기
-          </button>
         </div>
       )}
     </div>

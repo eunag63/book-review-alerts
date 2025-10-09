@@ -11,6 +11,7 @@ export default function Header() {
   const isPublisherPage = pathname?.startsWith('/publisher/')
   const isWinnersPage = pathname?.startsWith('/winners/')
   const isSubmitPage = pathname?.startsWith('/submit/')
+  const isMyDeadlinesPage = pathname === '/my-deadlines'
 
   const handleLoginSuccess = (userInfo: { id: number; email?: string; nickname?: string; profile_image?: string; access_token: string }) => {
     console.log('로그인 성공:', userInfo)
@@ -29,7 +30,7 @@ export default function Header() {
       <div className="flex items-center justify-between">
         <Link href="/" className="block">
           <h1 className="text-white text-2xl font-bold tracking-tight m-0 hover:opacity-80 transition-opacity" style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '-0.5px' }}>
-            <span className="text-[#80FD8F]">freebook</span> {isPublisherPage ? '출판사 대시보드' : isWinnersPage ? '서평단 개인정보 입력' : isSubmitPage ? '서평 링크 제출' : '책 서평단 모음'}
+            <span className="text-[#80FD8F]">freebook</span> {isPublisherPage ? '출판사 대시보드' : isWinnersPage ? '서평단 개인정보 입력' : isSubmitPage ? '서평 링크 제출' : isMyDeadlinesPage ? '내 서평단 마감일' : '책 서평단 모음'}
           </h1>
         </Link>
         
