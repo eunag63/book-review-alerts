@@ -7,14 +7,21 @@ import KakaoLogin from './KakaoLogin'
 
 export default function Header() {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, logout, login } = useAuth()
   const isPublisherPage = pathname?.startsWith('/publisher/')
   const isWinnersPage = pathname?.startsWith('/winners/')
   const isSubmitPage = pathname?.startsWith('/submit/')
 
   const handleLoginSuccess = (userInfo: { id: number; email?: string; nickname?: string; profile_image?: string; access_token: string }) => {
     console.log('로그인 성공:', userInfo)
-    // 실제로는 API를 통해 사용자 정보를 저장하고 토큰을 받아야 함
+    // AuthContext의 login 함수 호출해서 상태 업데이트
+    login({
+      id: userInfo.id,
+      kakao_id: 0, // 실제 kakao_id는 서버에서 관리
+      email: userInfo.email,
+      nickname: userInfo.nickname,
+      profile_image: userInfo.profile_image
+    })
   }
 
   return (

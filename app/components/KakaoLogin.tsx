@@ -90,16 +90,45 @@ export default function KakaoLogin({ onLoginSuccess, onLoginError }: KakaoLoginP
         // 사용자 정보 요청
         window.Kakao.API.request({
           url: '/v2/user/me',
-          success: (userInfo: KakaoUserInfo) => {
+          success: async (userInfo: KakaoUserInfo) => {
             console.log('사용자 정보:', userInfo)
-            if (onLoginSuccess) {
-              onLoginSuccess({
-                id: userInfo.id,
-                email: userInfo.kakao_account?.email,
-                nickname: userInfo.properties?.nickname,
-                profile_image: userInfo.properties?.profile_image,
-                access_token: authObj.access_token
+            
+            try {
+              // 우리 서버에 사용자 정보 저장
+              const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  kakao_id: userInfo.id,
+                  email: userInfo.kakao_account?.email,
+                  nickname: userInfo.properties?.nickname,
+                  profile_image: userInfo.properties?.profile_image
+                })
               })
+
+              const result = await response.json()
+
+              if (result.success) {
+                console.log('서버 로그인 성공:', result.user)
+                if (onLoginSuccess) {
+                  onLoginSuccess({
+                    id: result.user.id,
+                    email: result.user.email,
+                    nickname: result.user.nickname,
+                    profile_image: result.user.profile_image,
+                    access_token: authObj.access_token
+                  })
+                }
+              } else {
+                console.error('서버 로그인 실패:', result.error)
+                if (onLoginError) onLoginError(new Error(result.error))
+              }
+
+            } catch (error) {
+              console.error('서버 로그인 요청 실패:', error)
+              if (onLoginError) onLoginError(error as Error)
             }
           },
           fail: (error: Error) => {
