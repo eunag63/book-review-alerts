@@ -35,21 +35,14 @@ export default function Header() {
         
         <div className="flex items-center gap-4">
           {user ? (
-            <div className="flex items-center gap-3">
-              <span className="text-white text-sm">
-                안녕하세요, {user.nickname || '사용자'}님!
-              </span>
-              <button
-                onClick={logout}
-                className="bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm"
-              >
-                로그아웃
-              </button>
-            </div>
+            <button
+              onClick={logout}
+              className="text-white text-sm hover:text-gray-300 transition-colors"
+            >
+              로그아웃
+            </button>
           ) : (
-            <div className="scale-75">
-              <KakaoLogin onLoginSuccess={handleLoginSuccess} />
-            </div>
+            <KakaoLogin onLoginSuccess={handleLoginSuccess} />
           )}
         </div>
       </div>

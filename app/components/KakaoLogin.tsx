@@ -144,13 +144,6 @@ export default function KakaoLogin({ onLoginSuccess, onLoginError }: KakaoLoginP
     })
   }
 
-  const handleKakaoLogout = () => {
-    if (!isKakaoLoaded || !window.Kakao) return
-
-    window.Kakao.Auth.logout(() => {
-      console.log('카카오 로그아웃 완료')
-    })
-  }
 
   if (!isKakaoLoaded) {
     return (
@@ -161,21 +154,11 @@ export default function KakaoLogin({ onLoginSuccess, onLoginError }: KakaoLoginP
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <button
-        onClick={handleKakaoLogin}
-        className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-4 rounded flex items-center justify-center gap-2"
-      >
-        <span>🍀</span>
-        카카오 로그인
-      </button>
-      
-      <button
-        onClick={handleKakaoLogout}
-        className="bg-gray-500 hover:bg-gray-600 text-white py-1 px-4 rounded text-sm"
-      >
-        로그아웃
-      </button>
-    </div>
+    <button
+      onClick={handleKakaoLogin}
+      className="text-white text-sm hover:text-gray-300 transition-colors"
+    >
+      로그인
+    </button>
   )
 }
