@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../lib/authContext'
 import { useRouter } from 'next/navigation'
 
@@ -102,62 +102,6 @@ export default function MyDeadlinesPage() {
     }
   }
 
-  const toggleSubmissionStatus = async (deadlineId: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'pending' ? 'submitted' : 'pending'
-
-    try {
-      const response = await fetch(`/api/user/deadlines/${deadlineId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          submission_status: newStatus
-        })
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        fetchDeadlines()
-      } else {
-        alert('상태 변경 실패: ' + result.error)
-      }
-    } catch (error) {
-      console.error('상태 변경 오류:', error)
-      alert('상태 변경 중 오류가 발생했습니다.')
-    }
-  }
-
-  const deleteDeadline = async (deadlineId: number) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return
-
-    try {
-      const response = await fetch(`/api/user/deadlines/${deadlineId}`, {
-        method: 'DELETE'
-      })
-
-      const result = await response.json()
-
-      if (result.success) {
-        fetchDeadlines()
-      } else {
-        alert('삭제 실패: ' + result.error)
-      }
-    } catch (error) {
-      console.error('삭제 오류:', error)
-      alert('삭제 중 오류가 발생했습니다.')
-    }
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
 
   const getDaysRemaining = (deadline: string) => {
     const today = new Date()
@@ -181,7 +125,9 @@ export default function MyDeadlinesPage() {
 
     // 6주 표시 (42일)
     for (let i = 0; i < 42; i++) {
-      const dateString = currentDate.toISOString().split('T')[0]
+      const dateString = currentDate.getFullYear() + '-' + 
+        String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(currentDate.getDate()).padStart(2, '0')
       const dayDeadlines = deadlines.filter(d => d.deadline === dateString)
       
       calendar.push({
@@ -259,7 +205,7 @@ export default function MyDeadlinesPage() {
       </div>
 
       {/* 캘린더 */}
-      <div className="mb-8">
+      <div className="mb-6">
         {/* 요일 헤더 */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {['일', '월', '화', '수', '목', '금', '토'].map(day => (
@@ -271,45 +217,86 @@ export default function MyDeadlinesPage() {
 
         {/* 캘린더 날짜들 */}
         <div className="grid grid-cols-7 gap-1">
-          {calendar.map((day, index) => (
-            <div
-              key={index}
-              onClick={() => setSelectedDate(day.date)}
-              className={`
-                min-h-[80px] p-2 border rounded cursor-pointer relative
-                ${day.isCurrentMonth ? 'bg-gray-800 border-gray-600' : 'bg-gray-900 border-gray-700'}
-                ${isToday(day.date) ? 'ring-2 ring-[#80FD8F]' : ''}
-                ${selectedDate?.toDateString() === day.date.toDateString() ? 'bg-gray-700' : ''}
-                hover:bg-gray-700 transition-colors
-              `}
-            >
-              <div className={`text-sm ${day.isCurrentMonth ? 'text-white' : 'text-gray-500'}`}>
-                {day.date.getDate()}
-              </div>
-              
-              {/* 마감일 표시 */}
-              {day.deadlines.map((deadline) => (
+          {calendar.map((day, index) => {
+            const isSelected = selectedDate?.toDateString() === day.date.toDateString()
+            const isEndOfWeek = index % 7 === 6 // 토요일
+            const selectedIndex = selectedDate ? calendar.findIndex(d => selectedDate?.toDateString() === d.date.toDateString()) : -1
+            
+            return (
+              <React.Fragment key={index}>
                 <div
-                  key={deadline.id}
+                  onClick={() => setSelectedDate(selectedDate?.toDateString() === day.date.toDateString() ? null : day.date)}
                   className={`
-                    text-xs mt-1 px-1 py-0.5 rounded truncate
-                    ${deadline.submission_status === 'submitted' 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-red-600 text-white'
-                    }
+                    min-h-[80px] p-2 border rounded cursor-pointer relative
+                    ${day.isCurrentMonth ? 'bg-gray-800 border-gray-600' : 'bg-gray-900 border-gray-700'}
+                    ${isToday(day.date) ? 'ring-2 ring-[#80FD8F]' : ''}
+                    ${isSelected ? 'bg-gray-700' : ''}
+                    hover:bg-gray-700 transition-colors
                   `}
-                  title={deadline.book_title}
                 >
-                  {deadline.book_title.length > 8 
-                    ? deadline.book_title.substring(0, 8) + '...' 
-                    : deadline.book_title
-                  }
+                  <div className={`text-sm ${day.isCurrentMonth ? 'text-white' : 'text-gray-500'}`}>
+                    {day.date.getDate()}
+                  </div>
+                  
+                  {/* 마감일 표시 */}
+                  <div className="flex gap-1 mt-1 flex-wrap">
+                    {day.deadlines.map((deadline) => (
+                      <span
+                        key={deadline.id}
+                        className={`
+                          text-sm
+                          ${deadline.submission_status === 'submitted' 
+                            ? 'text-[#80FD8F]' 
+                            : 'text-gray-300'
+                          }
+                        `}
+                      >
+                        🍀
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-          ))}
+
+                {/* 각 주의 끝(토요일)에 선택된 날짜가 그 주에 있으면 정보 표시 */}
+                {isEndOfWeek && selectedDate && selectedIndex >= Math.floor(index / 7) * 7 && selectedIndex <= index && (
+                  <div className="col-span-7 bg-gray-700 p-3 rounded mt-1 mb-1">
+                    {(() => {
+                      const selectedDateString = selectedDate.getFullYear() + '-' + 
+                        String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(selectedDate.getDate()).padStart(2, '0')
+                      const dayDeadlines = deadlines.filter(d => d.deadline === selectedDateString)
+                      
+                      if (dayDeadlines.length === 0) {
+                        return <p className="text-gray-400 text-xs">마감일이 없습니다.</p>
+                      }
+
+                      return (
+                        <div className="space-y-1">
+                          {dayDeadlines.map((deadline) => (
+                            <div key={deadline.id} className="flex items-center justify-between text-xs">
+                              <span className="text-white">{deadline.book_title}</span>
+                              <span className={`px-1 py-0.5 rounded text-xs ${
+                                getDaysRemaining(deadline.deadline) === '마감' 
+                                  ? 'bg-gray-600 text-white'
+                                  : getDaysRemaining(deadline.deadline) === 'D-day'
+                                  ? 'bg-[#80FD8F] text-black'
+                                  : 'bg-gray-600 text-white'
+                              }`}>
+                                {getDaysRemaining(deadline.deadline)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )}
+              </React.Fragment>
+            )
+          })}
         </div>
       </div>
+
 
       {showAddForm && (
         <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-lg mb-6">
@@ -378,86 +365,6 @@ export default function MyDeadlinesPage() {
             </button>
           </div>
         </form>
-      )}
-
-      {/* 선택된 날짜의 상세 정보 */}
-      {selectedDate && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-4">
-            {selectedDate.toLocaleDateString('ko-KR', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })} 마감일
-          </h3>
-          
-          {(() => {
-            const dayDeadlines = deadlines.filter(d => 
-              new Date(d.deadline).toDateString() === selectedDate.toDateString()
-            )
-            
-            if (dayDeadlines.length === 0) {
-              return (
-                <p className="text-gray-500">이 날짜에 마감일이 없습니다.</p>
-              )
-            }
-
-            return (
-              <div className="space-y-3">
-                {dayDeadlines.map((deadline) => (
-                  <div key={deadline.id} className="bg-gray-800 p-4 rounded-lg">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{deadline.book_title}</h4>
-                        {deadline.author && (
-                          <p className="text-gray-400 text-sm">작가: {deadline.author}</p>
-                        )}
-                        {deadline.publisher && (
-                          <p className="text-gray-400 text-sm">출판사: {deadline.publisher}</p>
-                        )}
-                        <span className={`inline-block mt-2 px-2 py-1 rounded text-xs font-medium ${
-                          getDaysRemaining(deadline.deadline) === '마감' 
-                            ? 'bg-red-600 text-white'
-                            : getDaysRemaining(deadline.deadline) === 'D-day'
-                            ? 'bg-yellow-600 text-white'
-                            : 'bg-blue-600 text-white'
-                        }`}>
-                          {getDaysRemaining(deadline.deadline)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => toggleSubmissionStatus(deadline.id, deadline.submission_status)}
-                          className={`px-3 py-1 rounded text-sm font-medium ${
-                            deadline.submission_status === 'submitted'
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-600 text-white hover:bg-gray-500'
-                          }`}
-                        >
-                          {deadline.submission_status === 'submitted' ? '제출완료' : '미제출'}
-                        </button>
-                        
-                        <button
-                          onClick={() => deleteDeadline(deadline.id)}
-                          className="px-3 py-1 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-500"
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    </div>
-
-                    {deadline.submission_status === 'submitted' && deadline.submitted_at && (
-                      <p className="text-green-400 text-sm mt-2">
-                        제출일: {formatDate(deadline.submitted_at)}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )
-          })()}
-        </div>
       )}
 
       {/* 전체 마감일이 없을 때 */}
