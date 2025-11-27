@@ -19,14 +19,6 @@ export default function HomePage() {
   const validReviews = reviews.filter(isDeadlineValid)
   const displayReviews = showAll ? validReviews : validReviews.slice(0, 2)
 
-  const [isApp, setIsApp] = useState(false)
-  
-  // 앱에서 접근하는지 확인 (User-Agent로 감지)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsApp(navigator.userAgent.includes('BookReviewAlerts-App'))
-    }
-  }, [])
 
   useEffect(() => {
     async function loadInitialData() {
