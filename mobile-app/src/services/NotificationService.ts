@@ -38,7 +38,7 @@ export class NotificationService {
       }
       
       if (finalStatus !== 'granted') {
-        alert('푸시 알림 권한이 필요합니다!');
+        console.log('푸시 알림 권한이 필요합니다!');
         return;
       }
       
@@ -52,7 +52,7 @@ export class NotificationService {
         console.log('토큰 발급 실패:', error);
       }
     } else {
-      alert('실제 기기에서만 푸시 알림을 사용할 수 있습니다.');
+      console.log('실제 기기에서만 푸시 알림을 사용할 수 있습니다.');
     }
 
     return token;

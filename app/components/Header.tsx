@@ -31,8 +31,8 @@ export default function Header() {
         <button 
           onClick={() => {
             // React Native와 통신하여 알림 설정 화면으로 이동
-            if (window.ReactNativeWebView) {
-              window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'NAVIGATE_TO_SETTINGS' }));
+            if ((window as any).ReactNativeWebView) {
+              (window as any).ReactNativeWebView.postMessage(JSON.stringify({ type: 'NAVIGATE_TO_SETTINGS' }));
             }
           }}
           className="text-xl hover:opacity-80 transition-opacity"
