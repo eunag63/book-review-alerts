@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { StyleSheet, View, Platform, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationService } from '../services/NotificationService';
@@ -17,11 +17,38 @@ if (Platform.OS !== 'web') {
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-
+  const webViewRef = useRef<any>(null);
 
   const goToNotificationSettings = () => {
     navigation.navigate('NotificationSettings' as never);
   };
+
+  // WebView에서 메시지 수신 처리
+  const handleMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === 'NAVIGATE_TO_SETTINGS') {
+        goToNotificationSettings();
+      }
+    } catch (error) {
+      console.log('PostMessage 파싱 에러:', error);
+    }
+  };
+
+  // WebView에 전역 함수 주입
+  useEffect(() => {
+    if (webViewRef.current) {
+      const injectedJS = `
+        window.ReactNativeWebView = {
+          postMessage: function(message) {
+            window.ReactNativeWebView.postMessage(message);
+          }
+        };
+        true;
+      `;
+      webViewRef.current.injectJavaScript(injectedJS);
+    }
+  }, []);
 
   if (Platform.OS === 'web') {
     // 웹에서는 iframe 사용
@@ -54,6 +81,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <WebView
+        ref={webViewRef}
         source={{ uri: 'http://localhost:3000' }}
         style={styles.webview}
         javaScriptEnabled={true}
@@ -65,15 +93,8 @@ export default function HomeScreen() {
         mixedContentMode="compatibility"
         allowsFullscreenVideo={true}
         userAgent="BookReviewAlerts-App/1.0"
+        onMessage={handleMessage}
       />
-      
-      {/* 알림 설정 버튼 */}
-      <TouchableOpacity 
-        style={styles.settingsButton} 
-        onPress={goToNotificationSettings}
-      >
-        <Text style={styles.settingsButtonText}>⚙️ 알림 설정</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -96,24 +117,5 @@ const styles = StyleSheet.create({
   fallbackText: {
     color: '#ffffff',
     fontSize: 16,
-  },
-  settingsButton: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    backgroundColor: '#80FD8F',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  settingsButtonText: {
-    color: '#0a0a0a',
-    fontSize: 14,
-    fontWeight: '600',
   },
 });

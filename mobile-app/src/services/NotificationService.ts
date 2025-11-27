@@ -7,6 +7,8 @@ import { Platform } from 'react-native';
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -64,17 +66,17 @@ export class NotificationService {
         body: "관심있는 서평단이 등록되었습니다. 지금 확인해보세요!",
         data: { url: 'book-review-alerts://home' },
       },
-      trigger: { seconds: 2 },
+      trigger: { seconds: 2 } as any,
     });
   }
 
   // 알림 클릭 처리
-  static addNotificationReceivedListener(callback: (notification: any) => void) {
+  static addNotificationReceivedListener(callback: any) {
     return Notifications.addNotificationReceivedListener(callback);
   }
 
   // 알림 응답 처리 (사용자가 알림 클릭했을 때)
-  static addNotificationResponseReceivedListener(callback: (response: any) => void) {
+  static addNotificationResponseReceivedListener(callback: any) {
     return Notifications.addNotificationResponseReceivedListener(callback);
   }
 }
