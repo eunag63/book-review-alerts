@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useEffect, useRef } from 'react';
 import HomeScreen from './src/screens/HomeScreen';
+import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
 import { NotificationService } from './src/services/NotificationService';
 
 const Stack = createStackNavigator();
@@ -51,6 +52,16 @@ export default function App() {
             component={HomeScreen} 
             options={{ 
               headerShown: false,
+            }} 
+          />
+          <Stack.Screen 
+            name="NotificationSettings" 
+            component={NotificationSettingsScreen} 
+            options={{ 
+              title: '알림 설정',
+              headerStyle: { backgroundColor: '#0a0a0a' },
+              headerTintColor: '#80FD8F',
+              headerTitleStyle: { color: '#ffffff' },
             }} 
           />
         </Stack.Navigator>

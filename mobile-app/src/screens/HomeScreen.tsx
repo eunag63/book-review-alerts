@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, Platform, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationService } from '../services/NotificationService';
+import { useNavigation } from '@react-navigation/native';
 
 // WebView는 웹에서 지원되지 않으므로 조건부 import
 let WebView: any = null;
@@ -15,13 +16,11 @@ if (Platform.OS !== 'web') {
 }
 
 export default function HomeScreen() {
-  const handleTestNotification = async () => {
-    try {
-      await NotificationService.sendTestNotification();
-      Alert.alert('알림 테스트', '2초 후에 테스트 알림이 표시됩니다!');
-    } catch (error) {
-      Alert.alert('오류', '알림 테스트에 실패했습니다.');
-    }
+  const navigation = useNavigation();
+
+
+  const goToNotificationSettings = () => {
+    navigation.navigate('NotificationSettings' as never);
   };
 
   if (Platform.OS === 'web') {
@@ -68,12 +67,12 @@ export default function HomeScreen() {
         userAgent="BookReviewAlerts-App/1.0"
       />
       
-      {/* 테스트용 알림 버튼 */}
+      {/* 알림 설정 버튼 */}
       <TouchableOpacity 
-        style={styles.testButton} 
-        onPress={handleTestNotification}
+        style={styles.settingsButton} 
+        onPress={goToNotificationSettings}
       >
-        <Text style={styles.testButtonText}>🔔 알림 테스트</Text>
+        <Text style={styles.settingsButtonText}>⚙️ 알림 설정</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -98,7 +97,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 16,
   },
-  testButton: {
+  settingsButton: {
     position: 'absolute',
     top: 60,
     right: 20,
@@ -112,7 +111,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  testButtonText: {
+  settingsButtonText: {
     color: '#0a0a0a',
     fontSize: 14,
     fontWeight: '600',
