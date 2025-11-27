@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, View, Platform, Text } from 'react-native';
+import { StyleSheet, View, Platform, Text, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NotificationService } from '../services/NotificationService';
 
 // WebView는 웹에서 지원되지 않으므로 조건부 import
 let WebView: any = null;
@@ -14,6 +15,15 @@ if (Platform.OS !== 'web') {
 }
 
 export default function HomeScreen() {
+  const handleTestNotification = async () => {
+    try {
+      await NotificationService.sendTestNotification();
+      Alert.alert('알림 테스트', '2초 후에 테스트 알림이 표시됩니다!');
+    } catch (error) {
+      Alert.alert('오류', '알림 테스트에 실패했습니다.');
+    }
+  };
+
   if (Platform.OS === 'web') {
     // 웹에서는 iframe 사용
     return (
@@ -57,6 +67,14 @@ export default function HomeScreen() {
         allowsFullscreenVideo={true}
         userAgent="BookReviewAlerts-App/1.0"
       />
+      
+      {/* 테스트용 알림 버튼 */}
+      <TouchableOpacity 
+        style={styles.testButton} 
+        onPress={handleTestNotification}
+      >
+        <Text style={styles.testButtonText}>🔔 알림 테스트</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -79,5 +97,24 @@ const styles = StyleSheet.create({
   fallbackText: {
     color: '#ffffff',
     fontSize: 16,
+  },
+  testButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    backgroundColor: '#80FD8F',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  testButtonText: {
+    color: '#0a0a0a',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
