@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import OnboardingButton from '../components/OnboardingButton';
 import OnboardingProgress from '../components/OnboardingProgress';
+import { useOnboarding } from '../contexts/OnboardingContext';
 
 const INTERESTS = ['문학', '비문학'];
 
 export default function OnboardingInterestScreen() {
   const navigation = useNavigation();
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const { interests, setInterests } = useOnboarding();
 
   const toggleInterest = (interest: string) => {
-    if (selectedInterests.includes(interest)) {
-      setSelectedInterests(selectedInterests.filter(i => i !== interest));
+    if (interests.includes(interest)) {
+      setInterests(interests.filter(i => i !== interest));
     } else {
-      setSelectedInterests([...selectedInterests, interest]);
+      setInterests([...interests, interest]);
     }
   };
 
   const handleNext = () => {
-    // TODO: 선택된 관심 분야 저장
     navigation.navigate('OnboardingCategory' as never);
   };
 
@@ -41,13 +41,13 @@ export default function OnboardingInterestScreen() {
               key={interest}
               style={[
                 styles.interestButton,
-                selectedInterests.includes(interest) && styles.interestButtonSelected
+                interests.includes(interest) && styles.interestButtonSelected
               ]}
               onPress={() => toggleInterest(interest)}
             >
               <Text style={[
                 styles.interestText,
-                selectedInterests.includes(interest) && styles.interestTextSelected
+                interests.includes(interest) && styles.interestTextSelected
               ]}>
                 {interest}
               </Text>
@@ -58,7 +58,7 @@ export default function OnboardingInterestScreen() {
         <OnboardingButton 
           title="다음"
           onPress={handleNext}
-          disabled={selectedInterests.length === 0}
+          disabled={interests.length === 0}
           style={styles.nextButton}
         />
       </View>

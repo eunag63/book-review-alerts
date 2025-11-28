@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import OnboardingButton from '../components/OnboardingButton';
 import OnboardingProgress from '../components/OnboardingProgress';
+import { useOnboarding } from '../contexts/OnboardingContext';
 
 const CATEGORIES = {
   문학: ['소설', '시', '그림책', '동화책'],
@@ -12,18 +13,17 @@ const CATEGORIES = {
 
 export default function OnboardingCategoryScreen() {
   const navigation = useNavigation();
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const { categories, setCategories } = useOnboarding();
 
   const toggleCategory = (category: string) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter(c => c !== category));
+    if (categories.includes(category)) {
+      setCategories(categories.filter(c => c !== category));
     } else {
-      setSelectedCategories([...selectedCategories, category]);
+      setCategories([...categories, category]);
     }
   };
 
   const handleNext = () => {
-    // TODO: 선택된 카테고리 저장
     navigation.navigate('OnboardingGender' as never);
   };
 
@@ -48,13 +48,13 @@ export default function OnboardingCategoryScreen() {
                     key={category}
                     style={[
                       styles.categoryItem,
-                      selectedCategories.includes(category) && styles.categoryItemSelected
+                      categories.includes(category) && styles.categoryItemSelected
                     ]}
                     onPress={() => toggleCategory(category)}
                   >
                     <Text style={[
                       styles.categoryText,
-                      selectedCategories.includes(category) && styles.categoryTextSelected
+                      categories.includes(category) && styles.categoryTextSelected
                     ]}>
                       {category}
                     </Text>
@@ -68,7 +68,7 @@ export default function OnboardingCategoryScreen() {
         <OnboardingButton 
           title="다음"
           onPress={handleNext}
-          disabled={selectedCategories.length === 0}
+          disabled={categories.length === 0}
           style={styles.nextButton}
         />
       </View>

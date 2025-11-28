@@ -3,10 +3,12 @@ import { StyleSheet, View, Text, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import OnboardingButton from '../components/OnboardingButton';
+import { useOnboarding } from '../contexts/OnboardingContext';
 
 export default function OnboardingCompleteScreen() {
   const navigation = useNavigation();
   const [showSecondMessage, setShowSecondMessage] = useState(false);
+  const { saveAllSettings } = useOnboarding();
 
   useEffect(() => {
     // 2초 후 두 번째 메시지 표시
@@ -17,7 +19,8 @@ export default function OnboardingCompleteScreen() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    await saveAllSettings();
     navigation.navigate('Home' as never);
   };
 

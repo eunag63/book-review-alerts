@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import OnboardingButton from '../components/OnboardingButton';
 import OnboardingProgress from '../components/OnboardingProgress';
+import { useOnboarding } from '../contexts/OnboardingContext';
 
 const PUBLISHERS = {
   '종합 출판사': ['시공사', '위즈덤하우스', '창비', '다산북스', '알에이치코리아', '바람의아이들'],
@@ -13,18 +14,17 @@ const PUBLISHERS = {
 
 export default function OnboardingPublisherScreen() {
   const navigation = useNavigation();
-  const [selectedPublishers, setSelectedPublishers] = useState<string[]>([]);
+  const { publishers, setPublishers } = useOnboarding();
 
   const togglePublisher = (publisher: string) => {
-    if (selectedPublishers.includes(publisher)) {
-      setSelectedPublishers(selectedPublishers.filter(p => p !== publisher));
+    if (publishers.includes(publisher)) {
+      setPublishers(publishers.filter(p => p !== publisher));
     } else {
-      setSelectedPublishers([...selectedPublishers, publisher]);
+      setPublishers([...publishers, publisher]);
     }
   };
 
   const handleNext = () => {
-    // TODO: 선택된 출판사 저장
     navigation.navigate('OnboardingComplete' as never);
   };
 
@@ -49,13 +49,13 @@ export default function OnboardingPublisherScreen() {
                     key={publisher}
                     style={[
                       styles.publisherItem,
-                      selectedPublishers.includes(publisher) && styles.publisherItemSelected
+                      publishers.includes(publisher) && styles.publisherItemSelected
                     ]}
                     onPress={() => togglePublisher(publisher)}
                   >
                     <Text style={[
                       styles.publisherText,
-                      selectedPublishers.includes(publisher) && styles.publisherTextSelected
+                      publishers.includes(publisher) && styles.publisherTextSelected
                     ]}>
                       {publisher}
                     </Text>
@@ -69,7 +69,7 @@ export default function OnboardingPublisherScreen() {
         <OnboardingButton 
           title="완료"
           onPress={handleNext}
-          disabled={selectedPublishers.length === 0}
+          disabled={publishers.length === 0}
           style={styles.nextButton}
         />
       </View>

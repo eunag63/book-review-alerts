@@ -13,6 +13,7 @@ import OnboardingGenderScreen from './src/screens/OnboardingGenderScreen';
 import OnboardingPublisherScreen from './src/screens/OnboardingPublisherScreen';
 import OnboardingCompleteScreen from './src/screens/OnboardingCompleteScreen';
 import { NotificationService } from './src/services/NotificationService';
+import { OnboardingProvider } from './src/contexts/OnboardingContext';
 
 const Stack = createStackNavigator();
 
@@ -47,7 +48,8 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
+      <OnboardingProvider>
+        <NavigationContainer>
         <Stack.Navigator 
           screenOptions={{
             headerShown: false,
@@ -113,7 +115,8 @@ export default function App() {
             }} 
           />
         </Stack.Navigator>
-      </NavigationContainer>
+        </NavigationContainer>
+      </OnboardingProvider>
       <StatusBar style="light" backgroundColor="#0a0a0a" />
     </SafeAreaProvider>
   );

@@ -1,26 +1,26 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import OnboardingButton from '../components/OnboardingButton';
 import OnboardingProgress from '../components/OnboardingProgress';
+import { useOnboarding } from '../contexts/OnboardingContext';
 
 const GENDERS = ['여성 작가', '남성 작가'];
 
 export default function OnboardingGenderScreen() {
   const navigation = useNavigation();
-  const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
+  const { authorGenders, setAuthorGenders } = useOnboarding();
 
   const toggleGender = (gender: string) => {
-    if (selectedGenders.includes(gender)) {
-      setSelectedGenders(selectedGenders.filter(g => g !== gender));
+    if (authorGenders.includes(gender)) {
+      setAuthorGenders(authorGenders.filter(g => g !== gender));
     } else {
-      setSelectedGenders([...selectedGenders, gender]);
+      setAuthorGenders([...authorGenders, gender]);
     }
   };
 
   const handleNext = () => {
-    // TODO: 선택된 성별 저장
     navigation.navigate('OnboardingPublisher' as never);
   };
 
@@ -41,13 +41,13 @@ export default function OnboardingGenderScreen() {
               key={gender}
               style={[
                 styles.genderButton,
-                selectedGenders.includes(gender) && styles.genderButtonSelected
+                authorGenders.includes(gender) && styles.genderButtonSelected
               ]}
               onPress={() => toggleGender(gender)}
             >
               <Text style={[
                 styles.genderText,
-                selectedGenders.includes(gender) && styles.genderTextSelected
+                authorGenders.includes(gender) && styles.genderTextSelected
               ]}>
                 {gender}
               </Text>
@@ -58,7 +58,7 @@ export default function OnboardingGenderScreen() {
         <OnboardingButton 
           title="다음"
           onPress={handleNext}
-          disabled={selectedGenders.length === 0}
+          disabled={authorGenders.length === 0}
           style={styles.nextButton}
         />
       </View>
