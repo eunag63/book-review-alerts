@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useEffect, useRef } from 'react';
 import HomeScreen from './src/screens/HomeScreen';
 import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
+import OnboardingWelcomeScreen from './src/screens/OnboardingWelcomeScreen';
 import { NotificationService } from './src/services/NotificationService';
 
 const Stack = createStackNavigator();
@@ -47,6 +48,13 @@ export default function App() {
             headerShown: false,
           }}
         >
+          <Stack.Screen 
+            name="OnboardingWelcome" 
+            component={OnboardingWelcomeScreen} 
+            options={{ 
+              headerShown: false,
+            }} 
+          />
           <Stack.Screen 
             name="Home" 
             component={HomeScreen} 
