@@ -5,51 +5,51 @@ import { useNavigation } from '@react-navigation/native';
 import OnboardingButton from '../components/OnboardingButton';
 import OnboardingProgress from '../components/OnboardingProgress';
 
-const INTERESTS = ['문학', '비문학'];
+const GENDERS = ['여성 작가', '남성 작가'];
 
-export default function OnboardingInterestScreen() {
+export default function OnboardingGenderScreen() {
   const navigation = useNavigation();
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
 
-  const toggleInterest = (interest: string) => {
-    if (selectedInterests.includes(interest)) {
-      setSelectedInterests(selectedInterests.filter(i => i !== interest));
+  const toggleGender = (gender: string) => {
+    if (selectedGenders.includes(gender)) {
+      setSelectedGenders(selectedGenders.filter(g => g !== gender));
     } else {
-      setSelectedInterests([...selectedInterests, interest]);
+      setSelectedGenders([...selectedGenders, gender]);
     }
   };
 
   const handleNext = () => {
-    // TODO: 선택된 관심 분야 저장
-    navigation.navigate('OnboardingCategory' as never);
+    // TODO: 선택된 성별 저장
+    navigation.navigate('OnboardingPublisher' as never);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <OnboardingProgress currentStep={1} totalSteps={4} />
+      <OnboardingProgress currentStep={3} totalSteps={4} />
       
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>
-            관심 분야 선택{'\n'}둘 다 선택할 수 있어요
+            선호 작가 성별{'\n'}자유롭게 선택하세요
           </Text>
         </View>
 
-        <View style={styles.interestsContainer}>
-          {INTERESTS.map((interest) => (
+        <View style={styles.gendersContainer}>
+          {GENDERS.map((gender) => (
             <TouchableOpacity
-              key={interest}
+              key={gender}
               style={[
-                styles.interestButton,
-                selectedInterests.includes(interest) && styles.interestButtonSelected
+                styles.genderButton,
+                selectedGenders.includes(gender) && styles.genderButtonSelected
               ]}
-              onPress={() => toggleInterest(interest)}
+              onPress={() => toggleGender(gender)}
             >
               <Text style={[
-                styles.interestText,
-                selectedInterests.includes(interest) && styles.interestTextSelected
+                styles.genderText,
+                selectedGenders.includes(gender) && styles.genderTextSelected
               ]}>
-                {interest}
+                {gender}
               </Text>
             </TouchableOpacity>
           ))}
@@ -58,7 +58,7 @@ export default function OnboardingInterestScreen() {
         <OnboardingButton 
           title="다음"
           onPress={handleNext}
-          disabled={selectedInterests.length === 0}
+          disabled={selectedGenders.length === 0}
           style={styles.nextButton}
         />
       </View>
@@ -86,12 +86,12 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     lineHeight: 28,
   },
-  interestsContainer: {
+  gendersContainer: {
     flex: 1,
     paddingTop: 20,
     gap: 16,
   },
-  interestButton: {
+  genderButton: {
     backgroundColor: 'transparent',
     borderRadius: 12,
     paddingVertical: 20,
@@ -100,16 +100,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ffffff',
   },
-  interestButtonSelected: {
+  genderButtonSelected: {
     backgroundColor: 'rgba(128, 253, 143, 0.5)',
     borderColor: '#80FD8F',
   },
-  interestText: {
+  genderText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
   },
-  interestTextSelected: {
+  genderTextSelected: {
     color: '#ffffff',
   },
   nextButton: {

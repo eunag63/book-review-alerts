@@ -8,6 +8,10 @@ import HomeScreen from './src/screens/HomeScreen';
 import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
 import OnboardingWelcomeScreen from './src/screens/OnboardingWelcomeScreen';
 import OnboardingInterestScreen from './src/screens/OnboardingInterestScreen';
+import OnboardingCategoryScreen from './src/screens/OnboardingCategoryScreen';
+import OnboardingGenderScreen from './src/screens/OnboardingGenderScreen';
+import OnboardingPublisherScreen from './src/screens/OnboardingPublisherScreen';
+import OnboardingCompleteScreen from './src/screens/OnboardingCompleteScreen';
 import { NotificationService } from './src/services/NotificationService';
 
 const Stack = createStackNavigator();
@@ -59,6 +63,34 @@ export default function App() {
           <Stack.Screen 
             name="OnboardingInterest" 
             component={OnboardingInterestScreen} 
+            options={{ 
+              headerShown: false,
+            }} 
+          />
+          <Stack.Screen 
+            name="OnboardingCategory" 
+            component={OnboardingCategoryScreen} 
+            options={{ 
+              headerShown: false,
+            }} 
+          />
+          <Stack.Screen 
+            name="OnboardingGender" 
+            component={OnboardingGenderScreen} 
+            options={{ 
+              headerShown: false,
+            }} 
+          />
+          <Stack.Screen 
+            name="OnboardingPublisher" 
+            component={OnboardingPublisherScreen} 
+            options={{ 
+              headerShown: false,
+            }} 
+          />
+          <Stack.Screen 
+            name="OnboardingComplete" 
+            component={OnboardingCompleteScreen} 
             options={{ 
               headerShown: false,
             }} 
