@@ -8,7 +8,7 @@ export default function OnboardingWelcomeScreen() {
   const navigation = useNavigation();
 
   const handleStart = () => {
-    navigation.navigate('Home' as never);
+    navigation.navigate('OnboardingInterest' as never);
   };
 
   return (

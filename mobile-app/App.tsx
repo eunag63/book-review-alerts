@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react';
 import HomeScreen from './src/screens/HomeScreen';
 import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
 import OnboardingWelcomeScreen from './src/screens/OnboardingWelcomeScreen';
+import OnboardingInterestScreen from './src/screens/OnboardingInterestScreen';
 import { NotificationService } from './src/services/NotificationService';
 
 const Stack = createStackNavigator();
@@ -51,6 +52,13 @@ export default function App() {
           <Stack.Screen 
             name="OnboardingWelcome" 
             component={OnboardingWelcomeScreen} 
+            options={{ 
+              headerShown: false,
+            }} 
+          />
+          <Stack.Screen 
+            name="OnboardingInterest" 
+            component={OnboardingInterestScreen} 
             options={{ 
               headerShown: false,
             }} 
