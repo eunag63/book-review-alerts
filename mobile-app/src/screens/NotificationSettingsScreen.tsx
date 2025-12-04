@@ -4,148 +4,186 @@ import {
   View, 
   Text, 
   TouchableOpacity, 
-  Switch, 
   ScrollView,
   Alert,
   SafeAreaView
 } from 'react-native';
+import { UserSettingsService } from '../services/UserSettingsService';
 
-interface NotificationSettings {
-  genres: string[];           // ['문학', '비문학']
-  authorGenders: string[];    // ['여성 작가', '남성 작가']  
-  nationalities: string[];    // ['한국', '일본', '미국' 등]
-  publishers: string[];       // ['문학동네', '민음사' 등]
-}
+const INTERESTS = ['문학', '비문학'];
+
+const CATEGORIES = {
+  문학: ['소설', '시', '그림책', '동화책'],
+  비문학: ['에세이', '인문', '요리', '건강', '경제', '경영', '자기계발', '정치', '사회', '역사', '예술', '과학']
+};
+
+const AUTHOR_GENDERS = ['여성 작가', '남성 작가'];
+
+const PUBLISHERS = {
+  '종합 출판사': ['시공사', '위즈덤하우스', '창비', '다산북스', '알에이치코리아', '바람의아이들'],
+  '문학 출판사': ['김영사', '민음사', '문학과 지성사', '문학동네', '자음과 모음', '한길사', '열린책들'],
+  '아동 출판사': ['웅진씽크빅']
+};
 
 export default function NotificationSettingsScreen() {
-  const [settings, setSettings] = useState<NotificationSettings>({
-    genres: [],
-    authorGenders: [],
-    nationalities: [],
-    publishers: []
-  });
+  const [interests, setInterests] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [authorGenders, setAuthorGenders] = useState<string[]>([]);
+  const [publishers, setPublishers] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 사용 가능한 옵션들 (실제로는 API에서 가져와야 함)
-  const availableGenres = ['문학', '비문학'];
-  const availableAuthorGenders = ['여성 작가', '남성 작가'];
-  const [availableNationalities, setAvailableNationalities] = useState<string[]>(['한국', '일본', '미국', '영국', '중국']);
-  const [availablePublishers, setAvailablePublishers] = useState<string[]>(['문학동네', '민음사', '창비', '열린책들', '김영사']);
+  useEffect(() => {
+    loadUserSettings();
+  }, []);
 
-  // 설정 토글 함수
-  const toggleGenre = (genre: string) => {
-    setSettings(prev => ({
-      ...prev,
-      genres: prev.genres.includes(genre) 
-        ? prev.genres.filter(g => g !== genre)
-        : [...prev.genres, genre]
-    }));
+  const loadUserSettings = async () => {
+    try {
+      const userSettings = await UserSettingsService.getSettings();
+      if (userSettings) {
+        setInterests(userSettings.interests);
+        setCategories(userSettings.categories);
+        setAuthorGenders(userSettings.authorGenders);
+        setPublishers(userSettings.publishers);
+      }
+    } catch (error) {
+      console.error('사용자 설정 불러오기 실패:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleInterest = (interest: string) => {
+    if (interests.includes(interest)) {
+      setInterests(interests.filter(i => i !== interest));
+    } else {
+      setInterests([...interests, interest]);
+    }
+  };
+
+  const toggleCategory = (category: string) => {
+    if (categories.includes(category)) {
+      setCategories(categories.filter(c => c !== category));
+    } else {
+      setCategories([...categories, category]);
+    }
   };
 
   const toggleAuthorGender = (gender: string) => {
-    setSettings(prev => ({
-      ...prev,
-      authorGenders: prev.authorGenders.includes(gender)
-        ? prev.authorGenders.filter(g => g !== gender)
-        : [...prev.authorGenders, gender]
-    }));
-  };
-
-  const toggleNationality = (nationality: string) => {
-    setSettings(prev => ({
-      ...prev,
-      nationalities: prev.nationalities.includes(nationality)
-        ? prev.nationalities.filter(n => n !== nationality)
-        : [...prev.nationalities, nationality]
-    }));
+    if (authorGenders.includes(gender)) {
+      setAuthorGenders(authorGenders.filter(g => g !== gender));
+    } else {
+      setAuthorGenders([...authorGenders, gender]);
+    }
   };
 
   const togglePublisher = (publisher: string) => {
-    setSettings(prev => ({
-      ...prev,
-      publishers: prev.publishers.includes(publisher)
-        ? prev.publishers.filter(p => p !== publisher)
-        : [...prev.publishers, publisher]
-    }));
+    if (publishers.includes(publisher)) {
+      setPublishers(publishers.filter(p => p !== publisher));
+    } else {
+      setPublishers([...publishers, publisher]);
+    }
   };
 
-  // 설정 저장
-  const saveSettings = () => {
-    // TODO: Supabase에 저장하기
-    console.log('알림 설정 저장:', settings);
-    Alert.alert('저장 완료', '알림 설정이 저장되었습니다.');
+  const saveSettings = async () => {
+    try {
+      await UserSettingsService.saveSettings({
+        interests,
+        categories,
+        authorGenders,
+        publishers
+      });
+      Alert.alert('저장 완료', '알림 설정이 저장되었습니다.');
+    } catch (error) {
+      console.error('설정 저장 실패:', error);
+      Alert.alert('저장 실패', '설정을 저장하는 중 오류가 발생했습니다.');
+    }
   };
 
-  // 전체 선택/해제
-  const toggleAllGenres = () => {
-    const allSelected = availableGenres.every(genre => settings.genres.includes(genre));
-    setSettings(prev => ({
-      ...prev,
-      genres: allSelected ? [] : [...availableGenres]
-    }));
-  };
-
-  const toggleAllNationalities = () => {
-    const allSelected = availableNationalities.every(nationality => settings.nationalities.includes(nationality));
-    setSettings(prev => ({
-      ...prev,
-      nationalities: allSelected ? [] : [...availableNationalities]
-    }));
-  };
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>설정을 불러오는 중...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>📱 알림 설정</Text>
+        <Text style={styles.title}>알림 설정</Text>
         <Text style={styles.subtitle}>관심있는 서평단 조건을 설정하세요</Text>
 
-        {/* 장르 설정 */}
+        {/* 관심 분야 설정 */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>📚 장르</Text>
-            <TouchableOpacity onPress={toggleAllGenres}>
-              <Text style={styles.toggleAllText}>전체 {
-                availableGenres.every(genre => settings.genres.includes(genre)) ? '해제' : '선택'
-              }</Text>
-            </TouchableOpacity>
-          </View>
-          
+          <Text style={styles.sectionTitle}>관심 분야</Text>
           <View style={styles.optionsContainer}>
-            {availableGenres.map((genre) => (
+            {INTERESTS.map((interest) => (
               <TouchableOpacity
-                key={genre}
+                key={interest}
                 style={[
                   styles.optionButton,
-                  settings.genres.includes(genre) && styles.optionButtonSelected
+                  interests.includes(interest) && styles.optionButtonSelected
                 ]}
-                onPress={() => toggleGenre(genre)}
+                onPress={() => toggleInterest(interest)}
               >
                 <Text style={[
                   styles.optionText,
-                  settings.genres.includes(genre) && styles.optionTextSelected
+                  interests.includes(interest) && styles.optionTextSelected
                 ]}>
-                  {genre}
+                  {interest}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
+        {/* 카테고리 설정 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>카테고리</Text>
+          {Object.entries(CATEGORIES).map(([type, categoryList]) => (
+            <View key={type} style={styles.categorySection}>
+              <Text style={styles.categoryType}>{type}</Text>
+              <View style={styles.optionsContainer}>
+                {categoryList.map((category) => (
+                  <TouchableOpacity
+                    key={category}
+                    style={[
+                      styles.optionButton,
+                      categories.includes(category) && styles.optionButtonSelected
+                    ]}
+                    onPress={() => toggleCategory(category)}
+                  >
+                    <Text style={[
+                      styles.optionText,
+                      categories.includes(category) && styles.optionTextSelected
+                    ]}>
+                      {category}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+
         {/* 작가 성별 설정 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👥 작가 성별</Text>
+          <Text style={styles.sectionTitle}>작가 성별</Text>
           <View style={styles.optionsContainer}>
-            {availableAuthorGenders.map((gender) => (
+            {AUTHOR_GENDERS.map((gender) => (
               <TouchableOpacity
                 key={gender}
                 style={[
                   styles.optionButton,
-                  settings.authorGenders.includes(gender) && styles.optionButtonSelected
+                  authorGenders.includes(gender) && styles.optionButtonSelected
                 ]}
                 onPress={() => toggleAuthorGender(gender)}
               >
                 <Text style={[
                   styles.optionText,
-                  settings.authorGenders.includes(gender) && styles.optionTextSelected
+                  authorGenders.includes(gender) && styles.optionTextSelected
                 ]}>
                   {gender}
                 </Text>
@@ -154,65 +192,38 @@ export default function NotificationSettingsScreen() {
           </View>
         </View>
 
-        {/* 국가 설정 */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>🌍 국가</Text>
-            <TouchableOpacity onPress={toggleAllNationalities}>
-              <Text style={styles.toggleAllText}>전체 {
-                availableNationalities.every(nationality => settings.nationalities.includes(nationality)) ? '해제' : '선택'
-              }</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.optionsContainer}>
-            {availableNationalities.map((nationality) => (
-              <TouchableOpacity
-                key={nationality}
-                style={[
-                  styles.optionButton,
-                  settings.nationalities.includes(nationality) && styles.optionButtonSelected
-                ]}
-                onPress={() => toggleNationality(nationality)}
-              >
-                <Text style={[
-                  styles.optionText,
-                  settings.nationalities.includes(nationality) && styles.optionTextSelected
-                ]}>
-                  {nationality}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
         {/* 출판사 설정 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🏢 출판사</Text>
-          <View style={styles.optionsContainer}>
-            {availablePublishers.map((publisher) => (
-              <TouchableOpacity
-                key={publisher}
-                style={[
-                  styles.optionButton,
-                  settings.publishers.includes(publisher) && styles.optionButtonSelected
-                ]}
-                onPress={() => togglePublisher(publisher)}
-              >
-                <Text style={[
-                  styles.optionText,
-                  settings.publishers.includes(publisher) && styles.optionTextSelected
-                ]}>
-                  {publisher}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Text style={styles.sectionTitle}>출판사</Text>
+          {Object.entries(PUBLISHERS).map(([type, publisherList]) => (
+            <View key={type} style={styles.categorySection}>
+              <Text style={styles.categoryType}>{type}</Text>
+              <View style={styles.optionsContainer}>
+                {publisherList.map((publisher) => (
+                  <TouchableOpacity
+                    key={publisher}
+                    style={[
+                      styles.optionButton,
+                      publishers.includes(publisher) && styles.optionButtonSelected
+                    ]}
+                    onPress={() => togglePublisher(publisher)}
+                  >
+                    <Text style={[
+                      styles.optionText,
+                      publishers.includes(publisher) && styles.optionTextSelected
+                    ]}>
+                      {publisher}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          ))}
         </View>
 
         {/* 저장 버튼 */}
         <TouchableOpacity style={styles.saveButton} onPress={saveSettings}>
-          <Text style={styles.saveButtonText}>💾 설정 저장</Text>
+          <Text style={styles.saveButtonText}>설정 저장</Text>
         </TouchableOpacity>
 
         <View style={styles.spacer} />
@@ -230,6 +241,15 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#ffffff',
+    fontSize: 16,
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -239,28 +259,27 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#cccccc',
+    color: '#ffffff',
     marginBottom: 30,
+    opacity: 0.7,
   },
   section: {
     marginBottom: 32,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 20,
+  },
+  categorySection: {
+    marginBottom: 24,
+  },
+  categoryType: {
     fontSize: 18,
-    fontWeight: 'semibold',
+    fontWeight: '600',
     color: '#ffffff',
     marginBottom: 16,
-  },
-  toggleAllText: {
-    color: '#80FD8F',
-    fontSize: 14,
-    fontWeight: '500',
   },
   optionsContainer: {
     flexDirection: 'row',
@@ -268,24 +287,26 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    backgroundColor: 'transparent',
     borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#333333',
-    backgroundColor: '#0a0a0a',
+    borderColor: '#ffffff',
+    marginBottom: 8,
   },
   optionButtonSelected: {
-    backgroundColor: '#80FD8F',
+    backgroundColor: 'rgba(128, 253, 143, 0.5)',
     borderColor: '#80FD8F',
   },
   optionText: {
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '500',
+    textAlign: 'center',
   },
   optionTextSelected: {
-    color: '#0a0a0a',
+    color: '#ffffff',
     fontWeight: '600',
   },
   saveButton: {
