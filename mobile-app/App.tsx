@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import HomeScreen from './src/screens/HomeScreen';
 import NotificationSettingsScreen from './src/screens/NotificationSettingsScreen';
 import OnboardingWelcomeScreen from './src/screens/OnboardingWelcomeScreen';
@@ -14,14 +14,32 @@ import OnboardingPublisherScreen from './src/screens/OnboardingPublisherScreen';
 import OnboardingCompleteScreen from './src/screens/OnboardingCompleteScreen';
 import { NotificationService } from './src/services/NotificationService';
 import { OnboardingProvider } from './src/contexts/OnboardingContext';
+import { UserSettingsService } from './src/services/UserSettingsService';
 
 const Stack = createStackNavigator();
 
 export default function App() {
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
+  const [initialRoute, setInitialRoute] = useState<string | null>(null);
 
   useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const settings = await UserSettingsService.getSettings();
+        if (settings) {
+          setInitialRoute('Home');
+        } else {
+          setInitialRoute('OnboardingWelcome');
+        }
+      } catch (error) {
+        console.error('온보딩 상태 확인 실패:', error);
+        setInitialRoute('OnboardingWelcome');
+      }
+    };
+
+    checkOnboardingStatus();
+
     // 앱 시작할 때 푸시 알림 권한 요청
     NotificationService.registerForPushNotificationsAsync();
 
@@ -46,11 +64,16 @@ export default function App() {
     };
   }, []);
 
+  if (!initialRoute) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <OnboardingProvider>
         <NavigationContainer>
         <Stack.Navigator 
+          initialRouteName={initialRoute}
           screenOptions={{
             headerShown: false,
           }}

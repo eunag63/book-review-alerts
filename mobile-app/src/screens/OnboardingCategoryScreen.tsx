@@ -39,11 +39,11 @@ export default function OnboardingCategoryScreen() {
         </View>
 
         <ScrollView style={styles.categoriesContainer} showsVerticalScrollIndicator={false}>
-          {Object.entries(CATEGORIES).map(([type, categories]) => (
+          {Object.entries(CATEGORIES).map(([type, categoryList]) => (
             <View key={type} style={styles.categorySection}>
               <Text style={styles.categoryType}>{type}</Text>
               <View style={styles.categoryGrid}>
-                {categories.map((category) => (
+                {categoryList.map((category) => (
                   <TouchableOpacity
                     key={category}
                     style={[

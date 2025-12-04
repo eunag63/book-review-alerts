@@ -40,11 +40,11 @@ export default function OnboardingPublisherScreen() {
         </View>
 
         <ScrollView style={styles.publishersContainer} showsVerticalScrollIndicator={false}>
-          {Object.entries(PUBLISHERS).map(([type, publishers]) => (
+          {Object.entries(PUBLISHERS).map(([type, publisherList]) => (
             <View key={type} style={styles.publisherSection}>
               <Text style={styles.publisherType}>{type}</Text>
               <View style={styles.publisherGrid}>
-                {publishers.map((publisher) => (
+                {publisherList.map((publisher) => (
                   <TouchableOpacity
                     key={publisher}
                     style={[
