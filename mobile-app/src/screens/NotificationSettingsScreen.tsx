@@ -9,6 +9,7 @@ import {
   SafeAreaView
 } from 'react-native';
 import { UserSettingsService } from '../services/UserSettingsService';
+import { NotificationService } from '../services/NotificationService';
 
 const INTERESTS = ['문학', '비문학'];
 
@@ -86,12 +87,14 @@ export default function NotificationSettingsScreen() {
 
   const saveSettings = async () => {
     try {
-      await UserSettingsService.saveSettings({
-        interests,
-        categories,
-        authorGenders,
-        publishers
-      });
+      const settings = { interests, categories, authorGenders, publishers };
+      
+      // AsyncStorage에 저장
+      await UserSettingsService.saveSettings(settings);
+      
+      // Firebase 토픽 구독 업데이트
+      await NotificationService.updateTopicSubscriptions(settings);
+      
       Alert.alert('저장 완료', '알림 설정이 저장되었습니다.');
     } catch (error) {
       console.error('설정 저장 실패:', error);

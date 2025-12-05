@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { UserSettings, UserSettingsService } from '../services/UserSettingsService';
+import { NotificationService } from '../services/NotificationService';
 
 interface OnboardingContextType {
   interests: string[];
@@ -28,7 +29,12 @@ export const OnboardingProvider: React.FC<{ children: ReactNode }> = ({ children
       authorGenders,
       publishers,
     };
+    
+    // AsyncStorage에 저장
     await UserSettingsService.saveSettings(settings);
+    
+    // Firebase 토픽 구독 업데이트
+    await NotificationService.updateTopicSubscriptions(settings);
   };
 
   return (

@@ -40,17 +40,18 @@ export default function App() {
 
     checkOnboardingStatus();
 
-    // 앱 시작할 때 푸시 알림 권한 요청
-    NotificationService.registerForPushNotificationsAsync();
+    // Firebase 푸시 알림 권한 요청
+    NotificationService.requestPermission();
+    NotificationService.getFCMToken();
 
-    // 알림 수신 리스너
-    notificationListener.current = NotificationService.addNotificationReceivedListener((notification: any) => {
-      console.log('알림 수신:', notification);
+    // 포그라운드 알림 수신 리스너
+    notificationListener.current = NotificationService.addForegroundMessageListener((message: any) => {
+      console.log('포그라운드 알림 수신:', message);
     });
 
-    // 알림 클릭 리스너
-    responseListener.current = NotificationService.addNotificationResponseReceivedListener((response: any) => {
-      console.log('알림 클릭:', response);
+    // 백그라운드 알림 클릭 리스너
+    responseListener.current = NotificationService.addBackgroundMessageListener((message: any) => {
+      console.log('백그라운드 알림 클릭:', message);
       // 나중에 여기서 특정 페이지로 이동 처리
     });
 
