@@ -79,6 +79,25 @@ export async function POST(request: NextRequest) {
       .from('review_registrations')
       .insert([insertData])
       .select();
+    
+    // FreeBook에 이메일 전송
+    // 미 등록된 사태 재발 방지
+    if(!error) {
+      try {
+        const { Resend } = await import('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
+
+        await resend.emails.send({
+          from: 'FreeBook <hello@freebook.kr>',
+          to: 'hello@freebook.kr',
+          subject: '[FreeBook] 신규 서평단 등록 요청',
+          html: `${publisher} 출판사로부터 ${title} 서평단 등록 요청이 들어왔습니다.`
+        })
+
+      } catch (error) {
+        console.log('운영자 알림 이메일 발송 실패:', error)
+      }
+    }
 
     if (error) {
       console.error('Supabase 저장 오류:', error);

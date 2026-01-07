@@ -162,7 +162,7 @@ export async function PUT(request: NextRequest) {
       });
 
       const result = await resend.emails.send({
-        from: 'Free Book <hello@freebook.kr>',  // 발신자명 변경
+        from: 'FreeBook <hello@freebook.kr>',  // 발신자명 변경
         to: [registration.email],   // 실제 출판사 이메일로 발송
         subject: subject,
         html: htmlContent,
