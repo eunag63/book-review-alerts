@@ -17,9 +17,19 @@ export default function SearchReviews() {
 
   // 전체 리뷰를 불러오는 함수
   const loadAllReviews = useCallback(async () => {
-    const { data, error } = await supabase.from('reviews').select('*')
+    const now = new Date()
+    now.setHours(0, 0, 0, 0)
+
+    const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .gte('deadline', now.toISOString())
+    .order('deadline', { ascending: true })
+    .limit(100)
+    
     if (!error && data) {
-      const list = (data as Review[]).filter(isDeadlineValid)
+      const list = data as Review[]
+
       list.sort((a, b) => {
         // source가 registration인 항목을 상단에 고정
         if (a.source === 'registration' && b.source !== 'registration') return -1
@@ -29,6 +39,7 @@ export default function SearchReviews() {
       })
       // 배지 할당
       const listWithBadges = await assignBadgesToReviews(list)
+      
       setResults(listWithBadges)
       setDisplayCount(5) // 초기화
     }
@@ -75,6 +86,7 @@ export default function SearchReviews() {
         })
         // 검색 결과에도 배지 할당
         const listWithBadges = await assignBadgesToReviews(list)
+        console.log("listWithBadges: ", listWithBadges)
         setResults(listWithBadges)
         setDisplayCount(5) // 초기화
       }
@@ -120,6 +132,7 @@ export default function SearchReviews() {
       })
       // 키워드 필터 결과에도 배지 할당
       const listWithBadges = await assignBadgesToReviews(list)
+      console.log("listWithBadges: ", listWithBadges)
       setResults(listWithBadges)
       setDisplayCount(5) // 초기화
     }
@@ -130,7 +143,7 @@ export default function SearchReviews() {
     // RedirectClient에서 기록하므로 여기서는 리다이렉트만
     window.location.href = `/redirect/${reviewId}?source=${source}`
   }
-
+  console.log("results:", results)
   return (
     <div className="mb-6">
       <input
@@ -152,7 +165,10 @@ export default function SearchReviews() {
       {!loading && results.length > 0 && (
         <>
           <ul className="mt-4 space-y-2">
-            {results.slice(0, displayCount).map((r) => (
+            
+            {results.slice(0, displayCount).map((r) => {
+              console.log("결과값:", r)
+              return(
               <li key={r.id} className="p-4 border rounded relative">
                 {/* NEW 배지 */}
                 {isCreatedToday(r) && (
@@ -193,8 +209,8 @@ export default function SearchReviews() {
                 {r.source === 'registration' && r.registration_id ? (
                   <DescriptionBubble registrationId={r.registration_id} />
                 ) : null}
-              </li>
-            ))}
+              </li>)
+            })}
           </ul>
           {displayCount < results.length && (
             <div className="pt-3 mt-3">
