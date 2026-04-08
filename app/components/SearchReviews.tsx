@@ -86,7 +86,7 @@ export default function SearchReviews() {
         })
         // 검색 결과에도 배지 할당
         const listWithBadges = await assignBadgesToReviews(list)
-        console.log("listWithBadges: ", listWithBadges)
+        
         setResults(listWithBadges)
         setDisplayCount(5) // 초기화
       }
@@ -132,7 +132,7 @@ export default function SearchReviews() {
       })
       // 키워드 필터 결과에도 배지 할당
       const listWithBadges = await assignBadgesToReviews(list)
-      console.log("listWithBadges: ", listWithBadges)
+      
       setResults(listWithBadges)
       setDisplayCount(5) // 초기화
     }
@@ -143,7 +143,7 @@ export default function SearchReviews() {
     // RedirectClient에서 기록하므로 여기서는 리다이렉트만
     window.location.href = `/redirect/${reviewId}?source=${source}`
   }
-  console.log("results:", results)
+  
   return (
     <div className="mb-6">
       <input
@@ -167,7 +167,7 @@ export default function SearchReviews() {
           <ul className="mt-4 space-y-2">
             
             {results.slice(0, displayCount).map((r) => {
-              console.log("결과값:", r)
+              
               return(
               <li key={r.id} className="p-4 border rounded relative">
                 {/* NEW 배지 */}
