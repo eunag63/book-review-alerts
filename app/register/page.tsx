@@ -341,7 +341,7 @@ export default function RegisterPage() {
 
         <div>
           <label className="block text-sm font-medium text-white mb-2">
-            링크 <span className="text-red-400">*</span>
+            서평단 신청 링크 <span className="text-red-400">*</span>
             {isExistingBook && <span className="ml-2 text-xs text-gray-400">자동 입력됨</span>}
           </label>
           <input
