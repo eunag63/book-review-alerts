@@ -1,149 +1,190 @@
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '../../lib/supabaseClient'
-import type { Review } from '../../lib/types'
-import type { ReviewWithBadge } from '../../lib/clickAnalytics'
-import { isCreatedToday, isDeadlineValid } from '../../lib/reviewUtils'
-import { assignBadgesToReviews } from '../../lib/clickAnalytics'
-import KeywordFilter from './KeywordFilter'
-import DescriptionBubble from './DescriptionBubble'
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "../../lib/supabaseClient";
+import type { Review } from "../../lib/types";
+import type { ReviewWithBadge } from "../../lib/clickAnalytics";
+import { isCreatedToday, isDeadlineValid } from "../../lib/reviewUtils";
+import { assignBadgesToReviews } from "../../lib/clickAnalytics";
+import KeywordFilter from "./KeywordFilter";
+import DescriptionBubble from "./DescriptionBubble";
 
 export default function SearchReviews() {
-  const [query, setQuery] = useState('')
-  const [results, setResults] = useState<ReviewWithBadge[]>([])
-  const [loading, setLoading] = useState(false)
-  const [displayCount, setDisplayCount] = useState(5)
-
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<ReviewWithBadge[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [displayCount, setDisplayCount] = useState(5);
+  const [sortOrder, setSortOrder] = useState<"latest" | "deadline">("latest");
   // 전체 리뷰를 불러오는 함수
   const loadAllReviews = useCallback(async () => {
-    const now = new Date()
-    now.setHours(0, 0, 0, 0)
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
 
     const { data, error } = await supabase
-    .from('reviews')
-    .select('*')
-    .gte('deadline', now.toISOString())
-    .order('deadline', { ascending: true })
-    .limit(100)
-    
+      .from("reviews")
+      .select("*")
+      .gte("deadline", now.toISOString())
+      .order("deadline", { ascending: true })
+      .limit(100);
+
     if (!error && data) {
-      const list = data as Review[]
+      const list = data as Review[];
 
       list.sort((a, b) => {
-        // source가 registration인 항목을 상단에 고정
-        if (a.source === 'registration' && b.source !== 'registration') return -1
-        if (a.source !== 'registration' && b.source === 'registration') return 1
-        // 둘 다 registration이거나 둘 다 아닌 경우 최신순 정렬
-        return b.id - a.id
-      })
+        if (a.source === "registration" && b.source !== "registration")
+          return -1;
+        if (a.source !== "registration" && b.source === "registration")
+          return 1;
+
+        if (sortOrder === "latest") {
+          return b.id - a.id;
+        }
+
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+      });
       // 배지 할당
-      const listWithBadges = await assignBadgesToReviews(list)
-      
-      setResults(listWithBadges)
-      setDisplayCount(5) // 초기화
+      const listWithBadges = await assignBadgesToReviews(list);
+
+      setResults(listWithBadges);
+      setDisplayCount(5); // 초기화
     }
-  }, [])
+  }, []);
 
   // 컴포넌트 마운트시 전체 리스트 로드
   useEffect(() => {
-    loadAllReviews()
-  }, [loadAllReviews])
+    loadAllReviews();
+  }, [loadAllReviews]);
 
   const calcDDay = (deadline: string) => {
-    const today = new Date()
-    const target = new Date(deadline)
+    const today = new Date();
+    const target = new Date(deadline);
     const diff = Math.ceil(
       (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    )
-    return diff <= 0 ? 'D-day' : `D-${diff}`
-  }
+    );
+    return diff <= 0 ? "D-day" : `D-${diff}`;
+  };
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
       if (!query) {
         // 검색어가 없으면 전체 리스트 다시 로드
-        loadAllReviews()
-        return
+        loadAllReviews();
+        return;
       }
-      setLoading(true)
+      setLoading(true);
       const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
+        .from("reviews")
+        .select("*")
         .or(
           `title.ilike.%${query}%,` +
-          `author.ilike.%${query}%,` +
-          `publisher.ilike.%${query}%`
-        )
+            `author.ilike.%${query}%,` +
+            `publisher.ilike.%${query}%`
+        );
       if (!error && data) {
-        const list = (data as Review[]).filter(isDeadlineValid)
+        const list = (data as Review[]).filter(isDeadlineValid);
         list.sort((a, b) => {
           // source가 registration인 항목을 상단에 고정
-          if (a.source === 'registration' && b.source !== 'registration') return -1
-          if (a.source !== 'registration' && b.source === 'registration') return 1
+          if (a.source === "registration" && b.source !== "registration")
+            return -1;
+          if (a.source !== "registration" && b.source === "registration")
+            return 1;
           // 둘 다 registration이거나 둘 다 아닌 경우 마감일 순 정렬
-          return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-        })
+          return (
+            new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+          );
+        });
         // 검색 결과에도 배지 할당
-        const listWithBadges = await assignBadgesToReviews(list)
-        
-        setResults(listWithBadges)
-        setDisplayCount(5) // 초기화
+        const listWithBadges = await assignBadgesToReviews(list);
+
+        setResults(listWithBadges);
+        setDisplayCount(5); // 초기화
       }
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timeout)
-  }, [query, loadAllReviews])
+      setLoading(false);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [query, loadAllReviews]);
+
+  useEffect(() => {
+    setResults((prev) => {
+      const sorted = [...prev];
+
+      sorted.sort((a, b) => {
+        if (a.source === "registration" && b.source !== "registration")
+          return -1;
+        if (a.source !== "registration" && b.source === "registration")
+          return 1;
+
+        if (sortOrder === "latest") {
+          return b.id - a.id;
+        }
+
+        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+      });
+
+      return sorted;
+    });
+  }, [sortOrder]);
 
   // 키워드 필터링
-  const searchByFilters = useCallback(async (filters: { genre?: string; authorGender?: string; nationality?: string }) => {
-    setLoading(true)
-    
-    // 필터가 없으면 전체 데이터 가져오기
-    if (Object.keys(filters).length === 0) {
-      await loadAllReviews()
-      setLoading(false)
-      return
-    }
-    
-    // 필터가 있으면 조건에 맞는 데이터만 가져오기
-    let queryBuilder = supabase.from('reviews').select('*')
-    
-    if (filters.genre) {
-      queryBuilder = queryBuilder.eq('category', filters.genre)
-    }
-    if (filters.authorGender) {
-      const dbValue = filters.authorGender === '여성 작가' ? '여자' : '남자'
-      queryBuilder = queryBuilder.eq('author_gender', dbValue)
-    }
-    if (filters.nationality) {
-      queryBuilder = queryBuilder.eq('nationality', filters.nationality)
-    }
-    
-    const { data, error } = await queryBuilder
-    if (!error && data) {
-      const list = (data as Review[]).filter(isDeadlineValid)
-      list.sort((a, b) => {
-        // source가 registration인 항목을 상단에 고정
-        if (a.source === 'registration' && b.source !== 'registration') return -1
-        if (a.source !== 'registration' && b.source === 'registration') return 1
-        // 둘 다 registration이거나 둘 다 아닌 경우 마감일 순 정렬
-        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-      })
-      // 키워드 필터 결과에도 배지 할당
-      const listWithBadges = await assignBadgesToReviews(list)
-      
-      setResults(listWithBadges)
-      setDisplayCount(5) // 초기화
-    }
-    setLoading(false)
-  }, [loadAllReviews])
+  const searchByFilters = useCallback(
+    async (filters: {
+      genre?: string;
+      authorGender?: string;
+      nationality?: string;
+    }) => {
+      setLoading(true);
 
-  const handleClick = (reviewId: number, source: string = 'website') => {
+      // 필터가 없으면 전체 데이터 가져오기
+      if (Object.keys(filters).length === 0) {
+        await loadAllReviews();
+        setLoading(false);
+        return;
+      }
+
+      // 필터가 있으면 조건에 맞는 데이터만 가져오기
+      let queryBuilder = supabase.from("reviews").select("*");
+
+      if (filters.genre) {
+        queryBuilder = queryBuilder.eq("category", filters.genre);
+      }
+      if (filters.authorGender) {
+        const dbValue = filters.authorGender === "여성 작가" ? "여자" : "남자";
+        queryBuilder = queryBuilder.eq("author_gender", dbValue);
+      }
+      if (filters.nationality) {
+        queryBuilder = queryBuilder.eq("nationality", filters.nationality);
+      }
+
+      const { data, error } = await queryBuilder;
+      if (!error && data) {
+        const list = (data as Review[]).filter(isDeadlineValid);
+        list.sort((a, b) => {
+          // source가 registration인 항목을 상단에 고정
+          if (a.source === "registration" && b.source !== "registration")
+            return -1;
+          if (a.source !== "registration" && b.source === "registration")
+            return 1;
+          // 둘 다 registration이거나 둘 다 아닌 경우 마감일 순 정렬
+          return (
+            new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+          );
+        });
+        // 키워드 필터 결과에도 배지 할당
+        const listWithBadges = await assignBadgesToReviews(list);
+
+        setResults(listWithBadges);
+        setDisplayCount(5); // 초기화
+      }
+      setLoading(false);
+    },
+    [loadAllReviews]
+  );
+
+  const handleClick = (reviewId: number, source: string = "website") => {
     // RedirectClient에서 기록하므로 여기서는 리다이렉트만
-    window.location.href = `/redirect/${reviewId}?source=${source}`
-  }
-  
+    window.location.href = `/redirect/${reviewId}?source=${source}`;
+  };
+
   return (
     <div className="mb-6">
       <input
@@ -154,68 +195,75 @@ export default function SearchReviews() {
         className="w-full border-b border-gray-300 pb-1 focus:border-point focus:outline-none mb-4"
       />
 
-      <KeywordFilter onFilter={searchByFilters} />
+      <KeywordFilter
+        onFilter={searchByFilters}
+        sortOrder={sortOrder}
+        onSortChange={setSortOrder}
+      />
 
       {loading && <p className="text-sm text-gray-500 mt-2">검색 중...</p>}
 
-      {!loading && query !== '' && results.length === 0 && (
+      {!loading && query !== "" && results.length === 0 && (
         <p className="text-sm text-gray-500 mt-2">검색 결과가 없습니다.</p>
       )}
 
       {!loading && results.length > 0 && (
         <>
           <ul className="mt-4 space-y-2">
-            
             {results.slice(0, displayCount).map((r) => {
-              
-              return(
-              <li key={r.id} className="p-4 border rounded relative">
-                {/* NEW 배지 */}
-                {isCreatedToday(r) && (
-                  <span 
-                    className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
-                    style={{ backgroundColor: '#80FD8F', fontSize: '10px' }}
-                  >
-                    NEW
-                  </span>
-                )}
-                <p className="font-medium pr-12">{r.title}</p>
-                <p className="text-sm text-gray-600 mb-1">
-                  {[r.publisher, r.author, r.genre].filter(Boolean).join(' | ')}
-                </p>
-                <p className="text-sm text-point mb-1">{calcDDay(r.deadline)}</p>
-                <div className="flex justify-between items-center">
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      handleClick(r.id, 'website')
-                    }}
-                    className="text-point underline text-sm mt-1 inline-block"
-                  >
-                    신청하러 가기
-                  </a>
-                  {/* 배지를 오른쪽 아래에 작은 글자로 */}
-                  {r.badge && (
-                    <span 
-                      className="text-xs mt-1 font-medium"
-                      style={{ color: '#80FD8F' }}
+              return (
+                <li key={r.id} className="p-4 border rounded relative">
+                  {/* NEW 배지 */}
+                  {isCreatedToday(r) && (
+                    <span
+                      className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
+                      style={{ backgroundColor: "#80FD8F", fontSize: "10px" }}
                     >
-                      {r.badge}
+                      NEW
                     </span>
                   )}
-                </div>
+                  <p className="font-medium pr-12">{r.title}</p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    {[r.publisher, r.author, r.genre]
+                      .filter(Boolean)
+                      .join(" | ")}
+                  </p>
+                  <p className="text-sm text-point mb-1">
+                    {calcDDay(r.deadline)}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleClick(r.id, "website");
+                      }}
+                      className="text-point underline text-sm mt-1 inline-block"
+                    >
+                      신청하러 가기
+                    </a>
+                    {/* 배지를 오른쪽 아래에 작은 글자로 */}
+                    {r.badge && (
+                      <span
+                        className="text-xs mt-1 font-medium"
+                        style={{ color: "#80FD8F" }}
+                      >
+                        {r.badge}
+                      </span>
+                    )}
+                  </div>
 
-                {r.source === 'registration' && r.registration_id ? (
-                  <DescriptionBubble registrationId={r.registration_id} />
-                ) : null}
-              </li>)
+                  {r.source === "registration" && r.registration_id ? (
+                    <DescriptionBubble registrationId={r.registration_id} />
+                  ) : null}
+                </li>
+              );
             })}
           </ul>
           {displayCount < results.length && (
             <div className="pt-3 mt-3">
               <button
-                onClick={() => setDisplayCount(prev => prev + 5)}
+                onClick={() => setDisplayCount((prev) => prev + 5)}
                 className="w-full text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 ▽ 더보기
@@ -225,5 +273,5 @@ export default function SearchReviews() {
         </>
       )}
     </div>
-  )
+  );
 }
