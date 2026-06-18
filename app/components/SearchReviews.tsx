@@ -12,9 +12,17 @@ import DescriptionBubble from "./DescriptionBubble";
 export default function SearchReviews() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ReviewWithBadge[]>([]);
+  const [allReviews, setAllReviews] = useState<ReviewWithBadge[]>([]);
   const [loading, setLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(5);
   const [sortOrder, setSortOrder] = useState<"latest" | "deadline">("latest");
+
+  const [filters, setFilters] = useState<{
+    genre?: string;
+    authorGender?: string;
+    nationality?: string;
+  }>({});
+
   // 전체 리뷰를 불러오는 함수
   const loadAllReviews = useCallback(async () => {
     const now = new Date();
@@ -30,22 +38,9 @@ export default function SearchReviews() {
     if (!error && data) {
       const list = data as Review[];
 
-      list.sort((a, b) => {
-        if (a.source === "registration" && b.source !== "registration")
-          return -1;
-        if (a.source !== "registration" && b.source === "registration")
-          return 1;
-
-        if (sortOrder === "latest") {
-          return b.id - a.id;
-        }
-
-        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-      });
       // 배지 할당
       const listWithBadges = await assignBadgesToReviews(list);
-
-      setResults(listWithBadges);
+      setAllReviews(listWithBadges);
       setDisplayCount(5); // 초기화
     }
   }, []);
@@ -64,126 +59,58 @@ export default function SearchReviews() {
     return diff <= 0 ? "D-day" : `D-${diff}`;
   };
 
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if (!query) {
-        // 검색어가 없으면 전체 리스트 다시 로드
-        loadAllReviews();
-        return;
-      }
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("*")
-        .or(
-          `title.ilike.%${query}%,` +
-            `author.ilike.%${query}%,` +
-            `publisher.ilike.%${query}%`
-        );
-      if (!error && data) {
-        const list = (data as Review[]).filter(isDeadlineValid);
-        list.sort((a, b) => {
-          // source가 registration인 항목을 상단에 고정
-          if (a.source === "registration" && b.source !== "registration")
-            return -1;
-          if (a.source !== "registration" && b.source === "registration")
-            return 1;
-          // 둘 다 registration이거나 둘 다 아닌 경우 마감일 순 정렬
-          return (
-            new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-          );
-        });
-        // 검색 결과에도 배지 할당
-        const listWithBadges = await assignBadgesToReviews(list);
-
-        setResults(listWithBadges);
-        setDisplayCount(5); // 초기화
-      }
-      setLoading(false);
-    }, 300);
-    return () => clearTimeout(timeout);
-  }, [query, loadAllReviews]);
-
-  useEffect(() => {
-    setResults((prev) => {
-      const sorted = [...prev];
-
-      sorted.sort((a, b) => {
-        if (a.source === "registration" && b.source !== "registration")
-          return -1;
-        if (a.source !== "registration" && b.source === "registration")
-          return 1;
-
-        if (sortOrder === "latest") {
-          return b.id - a.id;
-        }
-
-        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
-      });
-
-      return sorted;
-    });
-  }, [sortOrder]);
-
-  // 키워드 필터링
-  const searchByFilters = useCallback(
-    async (filters: {
-      genre?: string;
-      authorGender?: string;
-      nationality?: string;
-    }) => {
-      setLoading(true);
-
-      // 필터가 없으면 전체 데이터 가져오기
-      if (Object.keys(filters).length === 0) {
-        await loadAllReviews();
-        setLoading(false);
-        return;
-      }
-
-      // 필터가 있으면 조건에 맞는 데이터만 가져오기
-      let queryBuilder = supabase.from("reviews").select("*");
-
-      if (filters.genre) {
-        queryBuilder = queryBuilder.eq("category", filters.genre);
-      }
-      if (filters.authorGender) {
-        const dbValue = filters.authorGender === "여성 작가" ? "여자" : "남자";
-        queryBuilder = queryBuilder.eq("author_gender", dbValue);
-      }
-      if (filters.nationality) {
-        queryBuilder = queryBuilder.eq("nationality", filters.nationality);
-      }
-
-      const { data, error } = await queryBuilder;
-      if (!error && data) {
-        const list = (data as Review[]).filter(isDeadlineValid);
-        list.sort((a, b) => {
-          // source가 registration인 항목을 상단에 고정
-          if (a.source === "registration" && b.source !== "registration")
-            return -1;
-          if (a.source !== "registration" && b.source === "registration")
-            return 1;
-          // 둘 다 registration이거나 둘 다 아닌 경우 마감일 순 정렬
-          return (
-            new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
-          );
-        });
-        // 키워드 필터 결과에도 배지 할당
-        const listWithBadges = await assignBadgesToReviews(list);
-
-        setResults(listWithBadges);
-        setDisplayCount(5); // 초기화
-      }
-      setLoading(false);
-    },
-    [loadAllReviews]
-  );
-
   const handleClick = (reviewId: number, source: string = "website") => {
     // RedirectClient에서 기록하므로 여기서는 리다이렉트만
     window.location.href = `/redirect/${reviewId}?source=${source}`;
   };
+
+  useEffect(() => {
+    let list = [...allReviews];
+
+    // 1. 검색
+    if (query.trim()) {
+      const keyword = query.toLowerCase();
+
+      list = list.filter(
+        (review) =>
+          review.title.toLowerCase().includes(keyword) ||
+          review.author.toLowerCase().includes(keyword) ||
+          review.publisher.toLowerCase().includes(keyword)
+      );
+    }
+
+    // 2. 장르
+    if (filters.genre) {
+      list = list.filter((r) => r.category === filters.genre);
+    }
+
+    // 3. 작가 성별
+    if (filters.authorGender) {
+      const gender = filters.authorGender === "여성 작가" ? "여자" : "남자";
+
+      list = list.filter((r) => r.author_gender === gender);
+    }
+
+    // 4. 국가
+    if (filters.nationality) {
+      list = list.filter((r) => r.nationality === filters.nationality);
+    }
+
+    // 5. 정렬
+    list.sort((a, b) => {
+      if (a.source === "registration" && b.source !== "registration") return -1;
+      if (a.source !== "registration" && b.source === "registration") return 1;
+
+      if (sortOrder === "latest") {
+        return b.id - a.id;
+      }
+
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    });
+
+    setResults(list);
+    setDisplayCount(5);
+  }, [allReviews, query, filters, sortOrder]);
 
   return (
     <div className="mb-6">
@@ -196,7 +123,7 @@ export default function SearchReviews() {
       />
 
       <KeywordFilter
-        onFilter={searchByFilters}
+        onFilter={setFilters}
         sortOrder={sortOrder}
         onSortChange={setSortOrder}
       />
