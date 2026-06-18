@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabaseClient";
-import { isDeadlineValid } from "../../lib/reviewUtils";
-import type { Review } from "../../lib/types";
+import { useState } from "react";
 
 interface KeywordFilterProps {
+  availableNationalities: string[];
+
   onFilter: (filters: {
     genre?: string;
     authorGender?: string;
@@ -17,6 +16,7 @@ interface KeywordFilterProps {
 }
 
 export default function KeywordFilter({
+  availableNationalities,
   onFilter,
   sortOrder,
   onSortChange,
@@ -24,35 +24,6 @@ export default function KeywordFilter({
   const [selectedGenre, setSelectedGenre] = useState<string>("");
   const [selectedAuthorGender, setSelectedAuthorGender] = useState<string>("");
   const [selectedNationality, setSelectedNationality] = useState<string>("");
-  const [availableNationalities, setAvailableNationalities] = useState<
-    string[]
-  >([]);
-
-  // 유효한 리뷰(마감일 지나지 않은)에서 사용 가능한 국가 목록 조회
-  const loadAvailableNationalities = async () => {
-    try {
-      const { data, error } = await supabase.from("reviews").select("*");
-      if (!error && data) {
-        const validReviews = (data as Review[]).filter(isDeadlineValid);
-        const uniqueNationalities = Array.from(
-          new Set(
-            validReviews.map((r) => r.nationality).filter(Boolean) // null, undefined, 빈 문자열 제거
-          )
-        );
-        setAvailableNationalities(uniqueNationalities);
-      }
-    } catch (error) {
-      console.error("국가 목록 조회 실패:", error);
-      setAvailableNationalities(["한국", "일본", "미국", "영국", "중국"]); // 기본값
-    }
-  };
-
-  // 컴포넌트가 마운트되면 국가 목록 로드 후 전체 리스트를 로드
-  useEffect(() => {
-    loadAvailableNationalities().then(() => {
-      onFilter({});
-    });
-  }, [onFilter]);
 
   const genres = ["문학", "비문학"];
   const authorGenders = ["여성 작가", "남성 작가"];

@@ -112,6 +112,14 @@ export default function SearchReviews() {
     setDisplayCount(5);
   }, [allReviews, query, filters, sortOrder]);
 
+  const availableNationalities = Array.from(
+    new Set(
+      allReviews
+        .map((review) => review.nationality)
+        .filter((nationality): nationality is string => Boolean(nationality))
+    )
+  ).sort();
+
   return (
     <div className="mb-6">
       <input
@@ -123,6 +131,7 @@ export default function SearchReviews() {
       />
 
       <KeywordFilter
+        availableNationalities={availableNationalities}
         onFilter={setFilters}
         sortOrder={sortOrder}
         onSortChange={setSortOrder}
