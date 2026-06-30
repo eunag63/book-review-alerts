@@ -1,70 +1,78 @@
 // app/HomePage.tsx
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import type { ReviewWithBadge } from '../lib/clickAnalytics'
-import { getReviewsByPeriod, getAvailablePeriods, calcDDay, isCreatedToday, isDeadlineValid } from '../lib/reviewUtils'
-import { assignBadgesToReviews } from '../lib/clickAnalytics'
+import { useState, useEffect } from "react";
+import type { ReviewWithBadge } from "../lib/clickAnalytics";
+import {
+  getReviewsByPeriod,
+  getAvailablePeriods,
+  calcDDay,
+  isCreatedToday,
+  isDeadlineValid,
+} from "../lib/reviewUtils";
+import { assignBadgesToReviews } from "../lib/clickAnalytics";
 // import BannerAd from './components/BannerAd'
-import SearchReviews from './components/SearchReviews'
-import DescriptionBubble from './components/DescriptionBubble'
+import SearchReviews from "./(site)/components/SearchReviews";
+import DescriptionBubble from "./(site)/components/DescriptionBubble";
 
 export default function HomePage() {
-  const [availablePeriods, setAvailablePeriods] = useState<string[]>([])
-  const [currentPeriodIndex, setCurrentPeriodIndex] = useState(0)
-  const [reviews, setReviews] = useState<ReviewWithBadge[]>([])
-  const [periodText, setPeriodText] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [showAll, setShowAll] = useState(false)
-  const validReviews = reviews.filter(isDeadlineValid)
-  const displayReviews = showAll ? validReviews : validReviews.slice(0, 2)
+  const [availablePeriods, setAvailablePeriods] = useState<string[]>([]);
+  const [currentPeriodIndex, setCurrentPeriodIndex] = useState(0);
+  const [reviews, setReviews] = useState<ReviewWithBadge[]>([]);
+  const [periodText, setPeriodText] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const validReviews = reviews.filter(isDeadlineValid);
+  const displayReviews = showAll ? validReviews : validReviews.slice(0, 2);
 
   useEffect(() => {
     async function loadInitialData() {
-      const available = await getAvailablePeriods()
-      setAvailablePeriods(available)
-      
+      const available = await getAvailablePeriods();
+      setAvailablePeriods(available);
+
       if (available.length > 0) {
-        const initial = available[0]
-        const initialData = await getReviewsByPeriod(initial)
+        const initial = available[0];
+        const initialData = await getReviewsByPeriod(initial);
         // 배지 할당
-        const reviewsWithBadges = await assignBadgesToReviews(initialData.reviews)
-        setReviews(reviewsWithBadges)
-        setPeriodText(initialData.periodText)
+        const reviewsWithBadges = await assignBadgesToReviews(
+          initialData.reviews
+        );
+        setReviews(reviewsWithBadges);
+        setPeriodText(initialData.periodText);
       }
-      setLoading(false)
+      setLoading(false);
     }
-    loadInitialData()
-  }, [])
+    loadInitialData();
+  }, []);
 
-  const handlePeriodChange = async (direction: 'prev' | 'next') => {
+  const handlePeriodChange = async (direction: "prev" | "next") => {
     const newIndex =
-      direction === 'prev'
+      direction === "prev"
         ? Math.max(0, currentPeriodIndex - 1)
-        : Math.min(availablePeriods.length - 1, currentPeriodIndex + 1)
-    if (newIndex === currentPeriodIndex) return
-    setLoading(true)
-    const period = availablePeriods[newIndex]
-    const result = await getReviewsByPeriod(period)
+        : Math.min(availablePeriods.length - 1, currentPeriodIndex + 1);
+    if (newIndex === currentPeriodIndex) return;
+    setLoading(true);
+    const period = availablePeriods[newIndex];
+    const result = await getReviewsByPeriod(period);
     if (!result.error) {
-      setCurrentPeriodIndex(newIndex)
+      setCurrentPeriodIndex(newIndex);
       // 배지 할당
-      const reviewsWithBadges = await assignBadgesToReviews(result.reviews)
-      setReviews(reviewsWithBadges)
-      setPeriodText(result.periodText)
+      const reviewsWithBadges = await assignBadgesToReviews(result.reviews);
+      setReviews(reviewsWithBadges);
+      setPeriodText(result.periodText);
     }
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
-  const canGoPrev = currentPeriodIndex > 0
-  const canGoNext = currentPeriodIndex < availablePeriods.length - 1
+  const canGoPrev = currentPeriodIndex > 0;
+  const canGoNext = currentPeriodIndex < availablePeriods.length - 1;
 
   if (loading) {
     return (
       <div className="min-h-screen">
         <p className="text-center text-gray-500">로딩 중...</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -81,20 +89,25 @@ export default function HomePage() {
           <>
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xl font-semibold">
-                {periodText} 서평단 <span className="text-point">{validReviews.length}개</span>
+                {periodText} 서평단{" "}
+                <span className="text-point">{validReviews.length}개</span>
               </h2>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => handlePeriodChange('prev')}
+                  onClick={() => handlePeriodChange("prev")}
                   disabled={!canGoPrev || loading}
-                  className={`text-xl ${canGoPrev && !loading ? 'text-point' : 'text-gray-300'}`}
+                  className={`text-xl ${
+                    canGoPrev && !loading ? "text-point" : "text-gray-300"
+                  }`}
                 >
                   ◁
                 </button>
                 <button
-                  onClick={() => handlePeriodChange('next')}
+                  onClick={() => handlePeriodChange("next")}
                   disabled={!canGoNext || loading}
-                  className={`text-xl ${canGoNext && !loading ? 'text-point' : 'text-gray-300'}`}
+                  className={`text-xl ${
+                    canGoNext && !loading ? "text-point" : "text-gray-300"
+                  }`}
                 >
                   ▷
                 </button>
@@ -107,20 +120,27 @@ export default function HomePage() {
                     <li key={r.id} className="p-4 border rounded relative">
                       {/* NEW 배지 */}
                       {isCreatedToday(r) && (
-                        <span 
+                        <span
                           className="absolute top-4 right-3 text-xs font-bold px-1 py-0.5 rounded text-black"
-                          style={{ backgroundColor: '#80FD8F', fontSize: '10px' }}
+                          style={{
+                            backgroundColor: "#80FD8F",
+                            fontSize: "10px",
+                          }}
                         >
                           NEW
                         </span>
                       )}
                       <p className="font-medium pr-12">{r.title}</p>
                       <p className="text-sm text-gray-600 mb-1">
-                        {[r.publisher, r.author, r.genre].filter(Boolean).join(' | ')}
+                        {[r.publisher, r.author, r.genre]
+                          .filter(Boolean)
+                          .join(" | ")}
                       </p>
                       {(() => {
-                        const dday = calcDDay(r.deadline)
-                        return dday !== 'D-day' ? <p className="text-sm text-point mb-1">{dday}</p> : null
+                        const dday = calcDDay(r.deadline);
+                        return dday !== "D-day" ? (
+                          <p className="text-sm text-point mb-1">{dday}</p>
+                        ) : null;
                       })()}
                       <div className="flex justify-between items-center">
                         <a
@@ -133,16 +153,16 @@ export default function HomePage() {
                         </a>
                         {/* 배지를 오른쪽 아래에 작은 글자로 */}
                         {r.badge && (
-                          <span 
+                          <span
                             className="text-xs mt-1 font-medium"
-                            style={{ color: '#80FD8F' }}
+                            style={{ color: "#80FD8F" }}
                           >
                             {r.badge}
                           </span>
                         )}
                       </div>
 
-                      {r.source === 'registration' && r.registration_id ? (
+                      {r.source === "registration" && r.registration_id ? (
                         <DescriptionBubble registrationId={r.registration_id} />
                       ) : null}
                     </li>
@@ -154,13 +174,15 @@ export default function HomePage() {
                       onClick={() => setShowAll((prev) => !prev)}
                       className="w-full text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
                     >
-                      {showAll ? '△ 접기' : '▽ 더보기'}
+                      {showAll ? "△ 접기" : "▽ 더보기"}
                     </button>
                   </div>
                 )}
               </>
             ) : (
-              <p className="text-gray-500">현재 {periodText} 서평단이 없습니다.</p>
+              <p className="text-gray-500">
+                현재 {periodText} 서평단이 없습니다.
+              </p>
             )}
           </>
         )}
@@ -169,5 +191,5 @@ export default function HomePage() {
       {/* <BannerAd /> */}
       <SearchReviews />
     </div>
-  )
+  );
 }
