@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 
 const menus = [
   {
-    href: "/admin/dashboard/review",
+    href: "/admin/dashboard/reviews",
     label: "서평단",
     icon: BookOpen,
   },
@@ -30,15 +30,14 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-60 shrink-0 border-r border-zinc-800 bg-black">
+    <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-zinc-800 bg-black">
       <div className="flex h-16 items-center border-b border-zinc-800 px-6">
         <h1 className="text-xl font-bold text-white">Freebook Admin</h1>
       </div>
 
-      <nav className="px-3 py-4">
+      <nav className="flex-1 px-3 py-4">
         {menus.map((menu) => {
           const Icon = menu.icon;
-
           const active = pathname === menu.href;
 
           return (
@@ -58,7 +57,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="absolute bottom-4 left-3 right-3">
+      <div className="border-t border-zinc-800 p-3">
         <button
           onClick={handleLogout}
           className="flex h-11 w-full items-center rounded-lg px-4 text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
