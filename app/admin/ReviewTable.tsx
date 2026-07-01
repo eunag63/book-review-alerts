@@ -71,20 +71,23 @@ https://freebook.kr/redirect/${review.id}`;
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-800">
-      <table className="w-full table-fixed">
+    <div className="overflow-x-auto rounded-xl border border-zinc-800">
+      <table className="min-w-[1200px]">
         <thead className="sticky top-0 bg-zinc-950">
           <tr className="border-b border-zinc-800">
-            <th className="px-6 py-4 text-left text-sm font-semibold text-zinc-400">
+            <th className="min-w-[520px] px-6 py-4 text-left text-sm font-semibold text-zinc-400">
               제목
             </th>
-            <th className="w-56 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
+
+            <th className="w-52 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
               작가
             </th>
+
             <th className="w-56 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
               출판사
             </th>
-            <th className="w-40 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
+
+            <th className="w-56 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
               마감일
             </th>
           </tr>
@@ -95,19 +98,27 @@ https://freebook.kr/redirect/${review.id}`;
             <tr
               key={review.id}
               onClick={() => handleCopy(review)}
-              className={`cursor-pointer border-b border-zinc-900 transition-all ${
+              className={`cursor-pointer border-b border-zinc-900 transition-colors ${
                 copiedId === review.id
                   ? "bg-[#80FD8F] text-black"
                   : "hover:bg-zinc-900"
               }`}
             >
-              <td className="px-6 py-4 font-medium">{review.title}</td>
+              <td className="whitespace-nowrap px-6 py-4 font-medium">
+                {review.title}
+              </td>
 
-              <td className="px-6 py-4 text-zinc-400">{review.author}</td>
+              <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
+                {review.author}
+              </td>
 
-              <td className="px-6 py-4 text-zinc-400">{review.publisher}</td>
+              <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
+                {review.publisher}
+              </td>
 
-              <td className="px-6 py-4 text-zinc-400">{review.deadline}</td>
+              <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
+                {formatDeadline(review.deadline)}
+              </td>
             </tr>
           ))}
         </tbody>
