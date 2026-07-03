@@ -10,6 +10,7 @@ interface Review {
   deadline: string;
   category: string;
   genre: string | null;
+  nationality: string | null;
 }
 
 interface Props {
@@ -44,13 +45,25 @@ function formatGenre(genre: string | null) {
     .join("/");
 }
 
+function formatCategory(review: Review) {
+  const parts = [review.category];
+
+  if (review.category === "문학" && review.nationality) {
+    parts.push(`${review.nationality}소설`);
+  }
+
+  if (review.genre) {
+    parts.push(...formatGenre(review.genre).split("/"));
+  }
+
+  return parts.join("/");
+}
+
 export default function ReviewTable({ reviews }: Props) {
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const handleCopy = async (review: Review) => {
-    const text = `[${review.category}${
-      review.genre ? "/" + formatGenre(review.genre) : ""
-    }]
+    const text = `[${formatCategory(review)}]
 
 🍀 ${review.title}
 🍀 ${review.author}
