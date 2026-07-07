@@ -48,13 +48,25 @@ function formatGenre(genre: string | null) {
 function formatCategory(review: Review) {
   const parts = [review.category];
 
-  if (review.category === "문학" && review.nationality) {
-    parts.push(`${review.nationality}소설`);
+  const genres = review.genre ? formatGenre(review.genre).split("/") : [];
+
+  if (genres.includes("청소년")) {
+    parts.push("청소년소설");
+  } else if (genres.includes("그림책")) {
+    parts.push("그림책");
+  } else if (review.nationality) {
+    if (genres.includes("에세이")) {
+      parts.push(`${review.nationality}에세이`);
+    } else {
+      parts.push(`${review.nationality}소설`);
+    }
   }
 
-  if (review.genre) {
-    parts.push(...formatGenre(review.genre).split("/"));
-  }
+  const displayGenres = genres.filter(
+    (genre) => genre !== "청소년" && genre !== "그림책" && genre !== "에세이"
+  );
+
+  parts.push(...displayGenres);
 
   return parts.join("/");
 }
