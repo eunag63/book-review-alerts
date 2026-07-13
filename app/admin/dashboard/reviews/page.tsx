@@ -61,11 +61,14 @@ export default async function ReviewPage({ searchParams }: Props) {
     endPage = totalPages;
     startPage = Math.max(1, endPage - maxVisiblePages + 1);
   }
+
+  const renderedAt = new Date().toISOString();
+
   return (
     <div className="p-8">
       <h1 className="mb-8 text-3xl font-bold text-white">서평단</h1>
 
-      <ReviewTable reviews={reviews ?? []} />
+      <ReviewTable reviews={reviews ?? []} renderedAt={renderedAt} />
 
       <div className="mt-8 flex justify-center">
         <div className="flex gap-2">

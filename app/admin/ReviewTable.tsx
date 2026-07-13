@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface Review {
   id: number;
@@ -15,6 +16,7 @@ interface Review {
 
 interface Props {
   reviews: Review[];
+  renderedAt: string;
 }
 
 const weekdays = [
@@ -71,8 +73,22 @@ function formatCategory(review: Review) {
   return parts.join("/");
 }
 
-export default function ReviewTable({ reviews }: Props) {
+export default function ReviewTable({ reviews, renderedAt }: Props) {
+  const router = useRouter();
+
   const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  const lastUpdated = useMemo(() => {
+    return new Date(renderedAt).toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  }, [renderedAt]);
 
   const handleCopy = async (review: Review) => {
     const text = `[${formatCategory(review)}]
@@ -96,58 +112,71 @@ https://freebook.kr/redirect/${review.id}`;
   };
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-zinc-800">
-      <table className="min-w-[1200px]">
-        <thead className="sticky top-0 bg-zinc-950">
-          <tr className="border-b border-zinc-800">
-            <th className="min-w-[520px] px-6 py-4 text-left text-sm font-semibold text-zinc-400">
-              제목
-            </th>
+    <>
+      <div className="mb-4 flex items-center justify-between">
+        <button
+          onClick={() => router.refresh()}
+          className="rounded-lg bg-[#80FD8F] px-4 py-2 font-medium text-black transition hover:opacity-90"
+        >
+          🔄 새로고침
+        </button>
 
-            <th className="w-52 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
-              작가
-            </th>
+        <span className="text-sm text-zinc-400">마지막 갱신 {lastUpdated}</span>
+      </div>
 
-            <th className="w-56 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
-              출판사
-            </th>
+      <div className="overflow-x-auto rounded-xl border border-zinc-800">
+        <table className="min-w-[1200px]">
+          <thead className="sticky top-0 bg-zinc-950">
+            <tr className="border-b border-zinc-800">
+              <th className="min-w-[520px] px-6 py-4 text-left text-sm font-semibold text-zinc-400">
+                제목
+              </th>
 
-            <th className="w-56 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
-              마감일
-            </th>
-          </tr>
-        </thead>
+              <th className="w-52 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
+                작가
+              </th>
 
-        <tbody>
-          {reviews.map((review) => (
-            <tr
-              key={review.id}
-              onClick={() => handleCopy(review)}
-              className={`cursor-pointer border-b border-zinc-900 transition-colors ${
-                copiedId === review.id
-                  ? "bg-[#80FD8F] text-black"
-                  : "hover:bg-zinc-900"
-              }`}
-            >
-              <td className="whitespace-nowrap px-6 py-4 font-medium">
-                {review.title}
-              </td>
+              <th className="w-56 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
+                출판사
+              </th>
 
-              <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
-                {review.author}
-              </td>
-
-              <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
-                {review.publisher}
-              </td>
-
-              <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
-                {formatDeadline(review.deadline)}
-              </td>
+              <th className="w-56 px-6 py-4 text-left text-sm font-semibold text-zinc-400">
+                마감일
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+
+          <tbody>
+            {reviews.map((review) => (
+              <tr
+                key={review.id}
+                onClick={() => handleCopy(review)}
+                className={`cursor-pointer border-b border-zinc-900 transition-colors ${
+                  copiedId === review.id
+                    ? "bg-[#80FD8F] text-black"
+                    : "hover:bg-zinc-900"
+                }`}
+              >
+                <td className="whitespace-nowrap px-6 py-4 font-medium">
+                  {review.title}
+                </td>
+
+                <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
+                  {review.author}
+                </td>
+
+                <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
+                  {review.publisher}
+                </td>
+
+                <td className="whitespace-nowrap px-6 py-4 text-zinc-400">
+                  {formatDeadline(review.deadline)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
