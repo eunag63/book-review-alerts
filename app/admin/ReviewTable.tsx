@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 
 interface Review {
   id: number;
@@ -113,12 +114,14 @@ https://freebook.kr/redirect/${review.id}`;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => router.refresh()}
-          className="rounded-lg bg-[#80FD8F] px-4 py-2 font-medium text-black transition hover:opacity-90"
+          className="rounded-md p-1.5 text-zinc-400 transition hover:bg-zinc-800 hover:text-white active:scale-95"
+          aria-label="새로고침"
+          title="새로고침"
         >
-          🔄 새로고침
+          <ArrowPathIcon className="h-5 w-5" />
         </button>
 
         <span className="text-sm text-zinc-400">마지막 갱신 {lastUpdated}</span>
