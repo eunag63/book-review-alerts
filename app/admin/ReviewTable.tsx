@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 
@@ -77,7 +77,7 @@ function formatCategory(review: Review) {
 export default function ReviewTable({ reviews, renderedAt }: Props) {
   const router = useRouter();
 
-  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const lastUpdated = useMemo(() => {
     return new Date(renderedAt).toLocaleString("ko-KR", {
@@ -91,25 +91,41 @@ export default function ReviewTable({ reviews, renderedAt }: Props) {
     });
   }, [renderedAt]);
 
+  useEffect(() => {
+    const saved = localStorage.getItem("posted-reviews");
+
+    if (!saved) return;
+
+    setSelectedIds(new Set(JSON.parse(saved)));
+  }, []);
+
   const handleCopy = async (review: Review) => {
     const text = `[${formatCategory(review)}]
-
-🍀 ${review.title}
-🍀 ${review.author}
-
-📚 ${review.publisher}
-
-✅ ${formatDeadline(review.deadline)}
-✅ 신청링크
-https://freebook.kr/redirect/${review.id}`;
+  
+  🍀 ${review.title}
+  🍀 ${review.author}
+  
+  📚 ${review.publisher}
+  
+  ✅ ${formatDeadline(review.deadline)}
+  ✅ 신청링크
+  https://freebook.kr/redirect/${review.id}`;
 
     await navigator.clipboard.writeText(text);
 
-    setCopiedId(review.id);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
 
-    setTimeout(() => {
-      setCopiedId(null);
-    }, 1000);
+      if (next.has(review.id)) {
+        next.delete(review.id);
+      } else {
+        next.add(review.id);
+      }
+
+      localStorage.setItem("posted-reviews", JSON.stringify(Array.from(next)));
+
+      return next;
+    });
   };
 
   return (
@@ -154,13 +170,13 @@ https://freebook.kr/redirect/${review.id}`;
               <tr
                 key={review.id}
                 onClick={() => handleCopy(review)}
-                className={`cursor-pointer border-b border-zinc-900 transition-colors ${
-                  copiedId === review.id
-                    ? "bg-[#80FD8F] text-black"
-                    : "hover:bg-zinc-900"
-                }`}
+                className="cursor-pointer border-b border-zinc-900 transition-colors hover:bg-zinc-900"
               >
-                <td className="whitespace-nowrap px-6 py-4 font-medium">
+                <td
+                  className={`whitespace-nowrap px-6 py-4 font-medium transition-colors ${
+                    selectedIds.has(review.id) ? "text-[#80FD8F]" : "text-white"
+                  }`}
+                >
                   {review.title}
                 </td>
 
