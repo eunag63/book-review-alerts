@@ -102,14 +102,14 @@ export default function ReviewTable({ reviews, renderedAt }: Props) {
   const handleCopy = async (review: Review) => {
     const text = `[${formatCategory(review)}]
   
-  🍀 ${review.title}
-  🍀 ${review.author}
+🍀 ${review.title}
+🍀 ${review.author}
   
-  📚 ${review.publisher}
+📚 ${review.publisher}
   
-  ✅ ${formatDeadline(review.deadline)}
-  ✅ 신청링크
-  https://freebook.kr/redirect/${review.id}`;
+✅ ${formatDeadline(review.deadline)}
+✅ 신청링크
+https://freebook.kr/redirect/${review.id}`;
 
     await navigator.clipboard.writeText(text);
 
