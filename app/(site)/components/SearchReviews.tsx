@@ -25,18 +25,19 @@ export default function SearchReviews() {
 
   // 전체 리뷰를 불러오는 함수
   const loadAllReviews = useCallback(async () => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    const today = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Seoul",
+    });
 
     const { data, error } = await supabase
       .from("reviews")
       .select("*")
-      .gte("deadline", now.toISOString())
+      .gte("deadline", today)
       .order("deadline", { ascending: true })
       .limit(100);
 
     if (!error && data) {
-      const list = data as Review[];
+      const list = (data as Review[]).filter(isDeadlineValid);
 
       // 배지 할당
       const listWithBadges = await assignBadgesToReviews(list);
@@ -98,9 +99,6 @@ export default function SearchReviews() {
 
     // 5. 정렬
     list.sort((a, b) => {
-      if (a.source === "registration" && b.source !== "registration") return -1;
-      if (a.source !== "registration" && b.source === "registration") return 1;
-
       if (sortOrder === "latest") {
         return b.id - a.id;
       }
