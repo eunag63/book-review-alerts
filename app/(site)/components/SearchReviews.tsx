@@ -14,7 +14,8 @@ export default function SearchReviews() {
   const [results, setResults] = useState<ReviewWithBadge[]>([]);
   const [allReviews, setAllReviews] = useState<ReviewWithBadge[]>([]);
   const [loading, setLoading] = useState(false);
-  const [displayCount, setDisplayCount] = useState(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [sortOrder, setSortOrder] = useState<"latest" | "deadline">("latest");
 
   const [filters, setFilters] = useState<{
@@ -42,7 +43,6 @@ export default function SearchReviews() {
       // 배지 할당
       const listWithBadges = await assignBadgesToReviews(list);
       setAllReviews(listWithBadges);
-      setDisplayCount(5); // 초기화
     }
   }, []);
 
@@ -107,8 +107,12 @@ export default function SearchReviews() {
     });
 
     setResults(list);
-    setDisplayCount(5);
+    setCurrentPage(1);
   }, [allReviews, query, filters, sortOrder]);
+
+  const totalPages = Math.ceil(results.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedResults = results.slice(startIndex, startIndex + itemsPerPage);
 
   const availableNationalities = Array.from(
     new Set(
@@ -144,7 +148,7 @@ export default function SearchReviews() {
       {!loading && results.length > 0 && (
         <>
           <ul className="mt-4 space-y-2">
-            {results.slice(0, displayCount).map((r) => {
+            {paginatedResults.map((r) => {
               return (
                 <li key={r.id} className="p-4 border rounded relative">
                   {/* NEW 배지 */}
@@ -194,14 +198,23 @@ export default function SearchReviews() {
               );
             })}
           </ul>
-          {displayCount < results.length && (
-            <div className="pt-3 mt-3">
-              <button
-                onClick={() => setDisplayCount((prev) => prev + 5)}
-                className="w-full text-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                ▽ 더보기
-              </button>
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 pt-4 mt-4">
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 text-sm rounded ${
+                      currentPage === page
+                        ? "text-white font-semibold"
+                        : "text-gray-500 hover:text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
             </div>
           )}
         </>
