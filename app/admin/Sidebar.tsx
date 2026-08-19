@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, BarChart3, LogOut } from "lucide-react";
+import { BookOpen, BarChart3, LogOut, PlusCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const menus = [
@@ -10,6 +10,11 @@ const menus = [
     href: "/admin/dashboard/reviews",
     label: "서평단",
     icon: BookOpen,
+  },
+  {
+    href: "/admin/dashboard/reviews/create",
+    label: "서평단 저장",
+    icon: PlusCircle,
   },
   {
     href: "/admin/dashboard/analytics",
