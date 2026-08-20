@@ -8,12 +8,12 @@ const initialForm = {
   publisher: "",
   author: "",
   deadline: "",
+  display_date: "",
   url: "",
   genre: "",
   author_gender: "",
   nationality: "",
   category: "",
-  review_deadline: "",
 };
 
 export default function CreateReviewPage() {
@@ -135,10 +135,10 @@ export default function CreateReviewPage() {
                 />
 
                 <Field
-                  label="서평 작성 마감일"
-                  name="review_deadline"
-                  type="datetime-local"
-                  value={form.review_deadline}
+                  label="홈페이지 노출 시작일"
+                  name="display_date"
+                  type="date"
+                  value={form.display_date}
                   onChange={handleChange}
                 />
               </div>

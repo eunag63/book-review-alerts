@@ -66,6 +66,10 @@ export async function getReviewsByPeriod(period: string) {
   let query = supabase.from("reviews").select("*");
   let periodText = "";
 
+  query = query.or(
+    `display_date.is.null,display_date.lte.${getDateString(today)}`
+  );
+
   if (period === "오늘") {
     query = query.eq("deadline", getDateString(today));
     periodText = "오늘 마감되는";
@@ -81,21 +85,25 @@ export async function getReviewsByPeriod(period: string) {
     nextMon.setDate(nextMon.getDate() + 7);
     const nextSun = new Date(thisSun);
     nextSun.setDate(nextSun.getDate() + 7);
+
     query = query
       .gte("deadline", getDateString(nextMon))
       .lte("deadline", getDateString(nextSun));
     periodText = "다음주 마감되는";
   }
 
-  const { data, error } = await query
-    .select("*")
-    .order("deadline", { ascending: true });
+  const { data, error } = await query.order("deadline", { ascending: true });
+
   if (error) {
     return { reviews: [], periodText, error };
   }
-  return { reviews: (data as Review[]) || [], periodText, error: null };
-}
 
+  return {
+    reviews: (data as Review[]) || [],
+    periodText,
+    error: null,
+  };
+}
 // 기간별 서평단 개수만 조회 (메타데이터용)
 export async function getReviewCountsByPeriod() {
   const today = getKoreanDate();
@@ -106,14 +114,16 @@ export async function getReviewCountsByPeriod() {
     const { count: todayCount } = await supabase
       .from("reviews")
       .select("*", { count: "exact", head: true })
-      .eq("deadline", getDateString(today));
+      .eq("deadline", getDateString(today))
+      .or(`display_date.is.null,display_date.lte.${getDateString(today)}`);
 
     // 이번주 마감 (오늘 포함)
     const { count: thisWeekCount } = await supabase
       .from("reviews")
       .select("*", { count: "exact", head: true })
       .gte("deadline", getDateString(today))
-      .lte("deadline", weekRange.end);
+      .lte("deadline", weekRange.end)
+      .or(`display_date.is.null,display_date.lte.${getDateString(today)}`);
 
     // 다음주 마감
     const nextMon = new Date(weekRange.start);
@@ -125,7 +135,8 @@ export async function getReviewCountsByPeriod() {
       .from("reviews")
       .select("*", { count: "exact", head: true })
       .gte("deadline", getDateString(nextMon))
-      .lte("deadline", getDateString(nextSun));
+      .lte("deadline", getDateString(nextSun))
+      .or(`display_date.is.null,display_date.lte.${getDateString(today)}`);
 
     return {
       today: todayCount || 0,

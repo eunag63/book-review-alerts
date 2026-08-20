@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       author_gender,
       nationality,
       category,
+      display_date,
     } = body;
 
     if (!title?.trim() || !publisher?.trim() || !author?.trim()) {
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
           author_gender: author_gender || null,
           nationality: nationality?.trim() || null,
           category: category || null,
+          display_date: display_date || null,
         },
       ])
       .select()
