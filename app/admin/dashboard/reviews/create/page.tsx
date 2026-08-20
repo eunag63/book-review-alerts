@@ -21,6 +21,7 @@ export default function CreateReviewPage() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -78,9 +79,12 @@ export default function CreateReviewPage() {
       if (!response.ok) {
         throw new Error(data.error || "서평단 저장에 실패했습니다.");
       }
+      setSuccess(true);
+      setForm(initialForm);
 
-      router.push("/admin/dashboard/reviews");
-      router.refresh();
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "서평단 저장에 실패했습니다."
@@ -93,6 +97,12 @@ export default function CreateReviewPage() {
   return (
     <main className="min-h-screen bg-black px-8 py-10 text-white">
       <div className="mx-auto max-w-4xl">
+        {success && (
+          <div className="mb-6 rounded-lg border border-[#80FD8F]/30 bg-[#80FD8F]/10 px-4 py-3 text-sm font-medium text-[#80FD8F]">
+            서평단이 저장되었습니다.
+          </div>
+        )}
+
         <div className="mb-8">
           <h2 className="text-2xl font-bold">서평단 저장</h2>
           <p className="mt-2 text-sm text-zinc-500">
