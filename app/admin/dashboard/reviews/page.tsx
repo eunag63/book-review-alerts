@@ -33,6 +33,7 @@ export default async function ReviewPage({ searchParams }: Props) {
         author,
         publisher,
         deadline,
+        display_date,
         url,
         category,
         genre,

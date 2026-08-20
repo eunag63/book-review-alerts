@@ -10,6 +10,7 @@ interface Review {
   author: string;
   publisher: string;
   deadline: string;
+  display_date: string | null;
   url: string;
   category: string | null;
   genre: string | null;
@@ -27,6 +28,7 @@ interface EditReview {
   author: string;
   publisher: string;
   deadline: string;
+  display_date: string;
   url: string;
   category: string;
   genre: string;
@@ -125,6 +127,7 @@ export default function ReviewTable({ reviews, renderedAt }: Props) {
     author: review.author,
     publisher: review.publisher,
     deadline: review.deadline,
+    display_date: review.display_date ?? "",
     url: review.url,
     category: review.category ?? "",
     genre: review.genre ?? "",
@@ -171,6 +174,7 @@ export default function ReviewTable({ reviews, renderedAt }: Props) {
           edited.author !== review.author ||
           edited.publisher !== review.publisher ||
           edited.deadline !== review.deadline ||
+          edited.display_date !== (review.display_date ?? "") ||
           edited.url !== review.url ||
           edited.category !== (review.category ?? "") ||
           edited.genre !== (review.genre ?? "") ||
@@ -286,7 +290,7 @@ https://freebook.kr/redirect/${review.id}`;
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-zinc-800">
-        <table className="min-w-[1200px]">
+        <table className="min-w-[1380px]">
           <thead className="sticky top-0 bg-zinc-950">
             <tr className="border-b border-zinc-800">
               <th className="min-w-[360px] px-6 py-4 text-left text-sm font-semibold text-zinc-400">
@@ -307,6 +311,10 @@ https://freebook.kr/redirect/${review.id}`;
 
               {isEditing && (
                 <>
+                  <th className="min-w-[180px] px-6 py-4 text-left text-sm font-semibold text-zinc-400">
+                    홈페이지 노출 시작일
+                  </th>
+
                   <th className="min-w-[300px] px-6 py-4 text-left text-sm font-semibold text-zinc-400">
                     신청 링크
                   </th>
@@ -422,6 +430,22 @@ https://freebook.kr/redirect/${review.id}`;
 
                   {isEditing && (
                     <>
+                      <td className="px-6 py-4">
+                        <input
+                          type="date"
+                          value={edited?.display_date ?? ""}
+                          onChange={(e) =>
+                            handleChange(
+                              review.id,
+                              "display_date",
+                              e.target.value
+                            )
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-10 w-full rounded-lg border border-zinc-700 bg-black px-3 text-sm text-white outline-none focus:border-[#80FD8F] [color-scheme:dark]"
+                        />
+                      </td>
+
                       <td className="px-6 py-4">
                         <input
                           value={edited?.url ?? ""}
