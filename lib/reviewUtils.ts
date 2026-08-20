@@ -63,36 +63,43 @@ export function isDeadlineValid(review: Review): boolean {
 // 기간별 서평단 조회 (상세 정보 포함)
 export async function getReviewsByPeriod(period: string) {
   const today = getKoreanDate();
-  let query = supabase.from("reviews").select("*");
+  const todayString = getDateString(today);
+
+  let query = supabase
+    .from("reviews")
+    .select("*")
+    .or(`display_date.is.null,display_date.lte.${todayString}`);
+
   let periodText = "";
 
-  query = query.or(
-    `display_date.is.null,display_date.lte.${getDateString(today)}`
-  );
-
   if (period === "오늘") {
-    query = query.eq("deadline", getDateString(today));
+    query = query.eq("deadline", todayString);
     periodText = "오늘 마감되는";
   } else if (period === "이번주") {
     const weekRange = getWeekRange(today);
-    query = query
-      .gte("deadline", getDateString(today))
-      .lte("deadline", weekRange.end);
+
+    query = query.gte("deadline", todayString).lte("deadline", weekRange.end);
+
     periodText = "이번주 마감되는";
   } else if (period === "다음주") {
     const { start: thisMon, end: thisSun } = getWeekRange(today);
+
     const nextMon = new Date(thisMon);
     nextMon.setDate(nextMon.getDate() + 7);
+
     const nextSun = new Date(thisSun);
     nextSun.setDate(nextSun.getDate() + 7);
 
     query = query
       .gte("deadline", getDateString(nextMon))
       .lte("deadline", getDateString(nextSun));
+
     periodText = "다음주 마감되는";
   }
 
-  const { data, error } = await query.order("deadline", { ascending: true });
+  const { data, error } = await query.order("deadline", {
+    ascending: true,
+  });
 
   if (error) {
     return { reviews: [], periodText, error };

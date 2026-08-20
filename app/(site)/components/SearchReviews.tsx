@@ -34,6 +34,7 @@ export default function SearchReviews() {
       .from("reviews")
       .select("*")
       .gte("deadline", today)
+      .or(`display_date.is.null,display_date.lte.${today}`)
       .order("deadline", { ascending: true })
       .limit(100);
 
