@@ -372,6 +372,11 @@ https://freebook.kr/redirect/${review.id}`;
                         }`}
                       >
                         {review.title}
+                        {review.display_date && (
+                          <span className="ml-2 text-xs font-normal text-zinc-500">
+                            ({review.display_date})
+                          </span>
+                        )}
                       </span>
                     )}
                   </td>
