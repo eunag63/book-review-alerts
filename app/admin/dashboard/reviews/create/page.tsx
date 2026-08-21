@@ -1,7 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+
+interface Publisher {
+  id: number;
+  name: string;
+}
 
 const initialForm = {
   title: "",
@@ -18,10 +23,58 @@ const initialForm = {
 
 export default function CreateReviewPage() {
   const router = useRouter();
+  const publisherRef = useRef<HTMLDivElement>(null);
+
   const [form, setForm] = useState(initialForm);
+  const [publishers, setPublishers] = useState<Publisher[]>([]);
+  const [publisherSearch, setPublisherSearch] = useState("");
+  const [isPublisherOpen, setIsPublisherOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const fetchPublishers = async () => {
+      try {
+        const response = await fetch("/api/admin/publishers");
+
+        if (!response.ok) {
+          throw new Error("출판사 조회에 실패했습니다.");
+        }
+
+        const data = await response.json();
+
+        setPublishers(data.publishers || []);
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "출판사 조회에 실패했습니다."
+        );
+      }
+    };
+
+    fetchPublishers();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        publisherRef.current &&
+        !publisherRef.current.contains(event.target as Node)
+      ) {
+        setIsPublisherOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const filteredPublishers = publishers.filter((publisher) =>
+    publisher.name.toLowerCase().includes(publisherSearch.toLowerCase())
+  );
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -32,6 +85,25 @@ export default function CreateReviewPage() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handlePublisherChange = (value: string) => {
+    setPublisherSearch(value);
+    setForm((prev) => ({
+      ...prev,
+      publisher: value,
+    }));
+    setIsPublisherOpen(true);
+  };
+
+  const handlePublisherSelect = (publisher: Publisher) => {
+    setForm((prev) => ({
+      ...prev,
+      publisher: publisher.name,
+    }));
+
+    setPublisherSearch(publisher.name);
+    setIsPublisherOpen(false);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -79,8 +151,10 @@ export default function CreateReviewPage() {
       if (!response.ok) {
         throw new Error(data.error || "서평단 저장에 실패했습니다.");
       }
+
       setSuccess(true);
       setForm(initialForm);
+      setPublisherSearch("");
 
       setTimeout(() => {
         setSuccess(false);
@@ -166,13 +240,47 @@ export default function CreateReviewPage() {
                   required
                 />
 
-                <Field
-                  label="출판사"
-                  name="publisher"
-                  value={form.publisher}
-                  onChange={handleChange}
-                  required
-                />
+                <div ref={publisherRef} className="relative">
+                  <label className="mb-2 block text-sm font-medium text-zinc-300">
+                    출판사
+                    <span className="ml-1 text-[#80FD8F]">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    value={publisherSearch}
+                    onChange={(e) => handlePublisherChange(e.target.value)}
+                    onFocus={() => setIsPublisherOpen(true)}
+                    placeholder="출판사 검색"
+                    required
+                    className="h-11 w-full rounded-lg border border-zinc-800 bg-black px-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-[#80FD8F]"
+                  />
+
+                  {isPublisherOpen && (
+                    <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-64 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-950 shadow-xl">
+                      {filteredPublishers.length > 0 ? (
+                        filteredPublishers.map((publisher) => (
+                          <button
+                            key={publisher.id}
+                            type="button"
+                            onClick={() => handlePublisherSelect(publisher)}
+                            className={`block w-full px-3 py-2.5 text-left text-sm transition hover:bg-zinc-900 ${
+                              form.publisher === publisher.name
+                                ? "bg-zinc-900 text-[#80FD8F]"
+                                : "text-zinc-300"
+                            }`}
+                          >
+                            {publisher.name}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-4 text-sm text-zinc-500">
+                          검색 결과가 없습니다.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </section>

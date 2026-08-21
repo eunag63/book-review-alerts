@@ -35,6 +35,7 @@ export async function POST(request: NextRequest) {
     const {
       title,
       publisher,
+      publisher_id,
       author,
       deadline,
       url,
@@ -52,6 +53,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!publisher_id) {
+      return NextResponse.json(
+        { error: "출판사를 선택해주세요." },
+        { status: 400 }
+      );
+    }
+
     if (!url?.trim() || !deadline) {
       return NextResponse.json(
         { error: "신청 링크와 모집 마감일은 필수입니다." },
@@ -65,6 +73,7 @@ export async function POST(request: NextRequest) {
         {
           title: title.trim(),
           publisher: publisher.trim(),
+          publisher_id: Number(publisher_id),
           author: author.trim(),
           deadline,
           url: url.trim(),
