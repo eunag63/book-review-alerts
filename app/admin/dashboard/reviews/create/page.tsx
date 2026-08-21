@@ -30,6 +30,7 @@ export default function CreateReviewPage() {
   const [publisherSearch, setPublisherSearch] = useState("");
   const [isPublisherOpen, setIsPublisherOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [publisherLoading, setPublisherLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -76,6 +77,13 @@ export default function CreateReviewPage() {
     publisher.name.toLowerCase().includes(publisherSearch.toLowerCase())
   );
 
+  const trimmedPublisherSearch = publisherSearch.trim();
+
+  const isExactMatch = publishers.some(
+    (publisher) =>
+      publisher.name.toLowerCase() === trimmedPublisherSearch.toLowerCase()
+  );
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -89,10 +97,12 @@ export default function CreateReviewPage() {
 
   const handlePublisherChange = (value: string) => {
     setPublisherSearch(value);
+
     setForm((prev) => ({
       ...prev,
       publisher: value,
     }));
+
     setIsPublisherOpen(true);
   };
 
@@ -104,6 +114,53 @@ export default function CreateReviewPage() {
 
     setPublisherSearch(publisher.name);
     setIsPublisherOpen(false);
+  };
+
+  const handlePublisherCreate = async () => {
+    const name = publisherSearch.trim();
+
+    if (!name) {
+      return;
+    }
+
+    try {
+      setPublisherLoading(true);
+      setError("");
+
+      const response = await fetch("/api/admin/publishers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "출판사 등록에 실패했습니다.");
+      }
+
+      const newPublisher = data.publisher as Publisher;
+
+      setPublishers((prev) => [...prev, newPublisher]);
+
+      setForm((prev) => ({
+        ...prev,
+        publisher: newPublisher.name,
+      }));
+
+      setPublisherSearch(newPublisher.name);
+      setIsPublisherOpen(false);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "출판사 등록에 실패했습니다."
+      );
+    } finally {
+      setPublisherLoading(false);
+    }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -258,7 +315,7 @@ export default function CreateReviewPage() {
 
                   {isPublisherOpen && (
                     <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-64 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-950 shadow-xl">
-                      {filteredPublishers.length > 0 ? (
+                      {filteredPublishers.length > 0 &&
                         filteredPublishers.map((publisher) => (
                           <button
                             key={publisher.id}
@@ -272,12 +329,27 @@ export default function CreateReviewPage() {
                           >
                             {publisher.name}
                           </button>
-                        ))
-                      ) : (
-                        <div className="px-3 py-4 text-sm text-zinc-500">
-                          검색 결과가 없습니다.
-                        </div>
+                        ))}
+
+                      {trimmedPublisherSearch && !isExactMatch && (
+                        <button
+                          type="button"
+                          onClick={handlePublisherCreate}
+                          disabled={publisherLoading}
+                          className="block w-full border-t border-zinc-800 px-3 py-3 text-left text-sm font-medium text-[#80FD8F] transition hover:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {publisherLoading
+                            ? "출판사 등록 중..."
+                            : `+ ${trimmedPublisherSearch} 등록`}
+                        </button>
                       )}
+
+                      {!trimmedPublisherSearch &&
+                        filteredPublishers.length === 0 && (
+                          <div className="px-3 py-4 text-sm text-zinc-500">
+                            출판사를 검색해주세요.
+                          </div>
+                        )}
                     </div>
                   )}
                 </div>

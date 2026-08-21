@@ -4,23 +4,25 @@ import { supabase } from "@/lib/supabaseClient";
 export async function GET() {
   try {
     const { data, error } = await supabase
-      .from("reviews")
-      .select("id, title, author, publisher, url, deadline, source, created_at")
-      .order("created_at", { ascending: false });
+      .from("publishers")
+      .select("id, name")
+      .order("name", { ascending: true });
 
     if (error) {
-      console.error("리뷰 데이터 조회 오류:", error);
+      console.error("출판사 조회 오류:", error);
+
       return NextResponse.json(
-        { error: "데이터 조회에 실패했습니다." },
+        { error: "출판사 조회에 실패했습니다." },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
-      reviews: data || [],
+      publishers: data || [],
     });
   } catch (error) {
     console.error("API 오류:", error);
+
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },
       { status: 500 }
@@ -31,75 +33,58 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const name = body.name?.trim();
 
-    const {
-      title,
-      publisher,
-      publisher_id,
-      author,
-      deadline,
-      url,
-      genre,
-      author_gender,
-      nationality,
-      category,
-      display_date,
-    } = body;
-
-    if (!title?.trim() || !publisher?.trim() || !author?.trim()) {
+    if (!name) {
       return NextResponse.json(
-        { error: "책 제목, 저자, 출판사는 필수입니다." },
+        { error: "출판사명을 입력해주세요." },
         { status: 400 }
       );
     }
 
-    if (!publisher_id) {
+    const { data: existingPublisher, error: existingError } = await supabase
+      .from("publishers")
+      .select("id, name")
+      .eq("name", name)
+      .maybeSingle();
+
+    if (existingError) {
+      console.error("출판사 확인 오류:", existingError);
+
       return NextResponse.json(
-        { error: "출판사를 선택해주세요." },
-        { status: 400 }
+        { error: "출판사 확인에 실패했습니다." },
+        { status: 500 }
       );
     }
 
-    if (!url?.trim() || !deadline) {
-      return NextResponse.json(
-        { error: "신청 링크와 모집 마감일은 필수입니다." },
-        { status: 400 }
-      );
+    if (existingPublisher) {
+      return NextResponse.json({
+        message: "이미 등록된 출판사입니다.",
+        publisher: existingPublisher,
+      });
     }
 
     const { data, error } = await supabase
-      .from("reviews")
-      .insert([
-        {
-          title: title.trim(),
-          publisher: publisher.trim(),
-          publisher_id: Number(publisher_id),
-          author: author.trim(),
-          deadline,
-          url: url.trim(),
-          genre: genre?.trim() || null,
-          author_gender: author_gender || null,
-          nationality: nationality?.trim() || null,
-          category: category || null,
-          display_date: display_date || null,
-        },
-      ])
-      .select()
+      .from("publishers")
+      .insert({
+        name,
+      })
+      .select("id, name")
       .single();
 
     if (error) {
-      console.error("서평단 저장 오류:", error);
+      console.error("출판사 등록 오류:", error);
 
       return NextResponse.json(
-        { error: "서평단 저장에 실패했습니다." },
+        { error: "출판사 등록에 실패했습니다." },
         { status: 500 }
       );
     }
 
     return NextResponse.json(
       {
-        message: "서평단이 저장되었습니다.",
-        review: data,
+        message: "출판사가 등록되었습니다.",
+        publisher: data,
       },
       { status: 201 }
     );
